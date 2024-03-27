@@ -10,24 +10,45 @@ dotenv.config();
 //this idk why!
 const secure = process.env.NODE_ENV === "production";
 
+//create order func
+export const createOrder = async (item) => {
+  console.log(item)
+  const { error } = orderDetailsValidator.validate(item);
+  if (error) {
+    console.log("Invalid request body format");
+    return;
+  }
+  const { authorID,eventID, ticketName } = item;
+  console.log(authorID);
+  const newOrder = new Order({
+    authorID: authorID,
+    eventID: eventID, 
+    ticketName: ticketName,
+  });
+  try {
+    await newOrder.save();
+  } catch (error) {
+    console.error("Error in validating user:", error);
+    return;
+  }
+  console.log("Order created");
+}
 //create order route
 export async function createOrderRoute(req: Request, res: Response) {
   // **** validate req.body
-
   console.log("createOrderRoute");
-
   const { error } = orderDetailsValidator.validate(req.body);
   if (error) {
     return res.status(400).end("Invalid request body format");
     return;
   }
-  const { eventID, EventTicketType } = req.body;
+  const { eventID, ticketName } = req.body;
   let authorID=req.headers['x-user'];
   console.log(authorID);
   const newOrder = new Order({
     authorID: authorID,
     eventID: eventID,
-    EventTicketType: EventTicketType,
+    ticketName: ticketName,
   });
   try {
     await newOrder.save();

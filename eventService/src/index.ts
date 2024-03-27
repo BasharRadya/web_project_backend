@@ -24,6 +24,8 @@ import {
   BUY_TICKET_EVENT,
   ERROR_401,
 } from "./const.js";
+import { Producer } from "./producer.js";
+
 
 dotenv.config();
 // MongoDB Atlas connection URI
@@ -34,12 +36,15 @@ const dbUri = `mongodb+srv://${dbUsername}:${dbPassword}@${dbClusterName}.lwmknq
 const secretKey = process.env.SECRET_KEY || "your_secret_key";
 const port = process.env.PORT || 3003;
 
+
 console.log("dbUri", dbUri);
 // Connect to MongoDB Atlas
 await mongoose.connect(dbUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 } as any);
+
+
 
 const eventAPI = express();
 
@@ -71,3 +76,6 @@ eventAPI.get("/", (req: Request, res: Response) => {
 eventAPI.listen(port, () => {
   console.log(`Server running! port ${port}`);
 });
+
+
+

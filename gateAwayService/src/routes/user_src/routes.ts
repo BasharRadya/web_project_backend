@@ -97,8 +97,9 @@ export const loginRoute = async (req: Request, res: Response) => {
     return;
   }
   console.log("user_data",user_data.id)
-  const token = jwt.sign({ username: username
-    ,autherID:user_data.id }, secretKey, {
+  const token = jwt.sign({ username: username,
+    autherID:user_data.id,
+    permission:user_data.permission }, secretKey, {
     expiresIn: "24h",
   });
   res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 24 });
@@ -119,15 +120,18 @@ export const verifyToken = (req: Request, res: Response,next:NextFunction) => {
   console.log(token)
   if (!token) {
     res.status(401).end("Access denied");
+    return;
     }
   try {
     let user = jwt.verify(token, secretKey) as JwtPayload;
     console.log(user);
     (req as any)['user'] = user.autherID;
+    (req as any)['permission'] = user.permission;
     console.log(req['user']);
 
   } catch (err) {
     res.status(400).end("Invalid token");
+    return;
   }
   next();
 };
@@ -142,7 +146,11 @@ export const verifyToken2 = (req: Request, res: Response): string => {
    try {
      let user = jwt.verify(token, secretKey) as JwtPayload;
      // (req as any)['user'] = user.username;
+     console.log(user);
+     (req as any)['user'] = user.username;
+     console.log(req['user']);
      return user.username;
+     
    } catch (err) {
      res.status(400).end("Invalid token");
      return ERROR_401;
@@ -230,3 +238,29 @@ export const changePermissionRoute = async (req: Request, res: Response) => {
     return;
   }
 };
+export const getPermission = async (req: Request, res: Response) => {
+  if (!(await validateUser(req, res, USER_PERMISSIONS))) {
+    console.log("error validate user in getPermission function")
+    return;
+  }
+  let username = req['user'];
+  console.log("username",username)
+    if(!username) {
+      console.log("problem in getPermissions functions")
+    }
+    let user_data: any = null; 
+    try {
+    user_data = await User.findOne({ username: username });
+     } catch (error) {
+       res.statusCode = 500;
+       res.end("Internal Server Error");
+       console.error("Error in validating user:", error);
+       return;
+     }
+      if (!user_data) {
+          console.log("did not find user in getPermission function")
+        return;
+      }
+      res.status(200).end(JSON.stringify({permission:user_data.permission}));
+    }
+

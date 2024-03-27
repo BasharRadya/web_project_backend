@@ -36,6 +36,11 @@ eventService.use(
     pathRewrite: {
       "^/event": "",
     },
+    onProxyReq: (proxyReq, req, res) => {
+      if(req['user']) {
+        proxyReq.setHeader('X-permission', req['permission']);
+      } 
+    }
   })
 );
 eventService.use(
@@ -55,6 +60,10 @@ eventService.use(
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
+    },onProxyReq: (proxyReq, req, res) => {
+      if(req['user']) {
+        proxyReq.setHeader('X-permission', req['permission']);
+      } 
     },
   })
 );
@@ -65,6 +74,10 @@ eventService.use(
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
+    },onProxyReq: (proxyReq, req, res) => {
+      if(req['user']) {
+        proxyReq.setHeader('X-permission', req['permission']);
+      } 
     },
   })
 );

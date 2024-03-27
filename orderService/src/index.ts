@@ -17,6 +17,8 @@ import {
   GET_ORDER_BY_EVENT_ID,
 } from "./const.js";
 
+import {consumeMessages} from "./consumer.js";
+
 dotenv.config();
 console.log(process.env.DB_USERNAME);
 // MongoDB Atlas connection URI
@@ -61,3 +63,6 @@ orderAPI.get("/", (req: Request, res: Response) => {
 orderAPI.listen(port, () => {
   console.log(`Server running! port ${port}`);
 });
+
+// // start consuming messages
+consumeMessages();

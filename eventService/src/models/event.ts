@@ -56,11 +56,11 @@ export const eventSchemaValidator = Joi.object({
     .required(),
 }).unknown(true);
 export const buyTicketValidator = Joi.object({
-  eventId: Joi.string().required(),
+  eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
   reservedTicketId: Joi.string().required(),
 }).unknown(true);
 export const reserveTicketValidator = Joi.object({
-  eventId: Joi.string().required(),
+  eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
 }).unknown(true);

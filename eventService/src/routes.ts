@@ -11,7 +11,7 @@ import {
   VALID_CATEGORYES,
   WORKER_PERMISSIONS,
 } from "./const.js";
-
+import { Producer } from "./producer.js";
 //get the ENV variables
 dotenv.config();
 
@@ -60,17 +60,17 @@ export const getEventById = async (req: Request, res: Response) => {
   //   return;
   // }
 
-  const eventId = req.params.id; // Extract event ID from URL
+  const eventID = req.params.id; // Extract event ID from URL
 
   let event;
   try {
     //Check if Id is in valid format
-    if (mongoose.Types.ObjectId.isValid(eventId)) {
+    if (mongoose.Types.ObjectId.isValid(eventID)) {
       event = await Event.findOne({
-        _id: new mongoose.Types.ObjectId(eventId),
+        _id: new mongoose.Types.ObjectId(eventID),
       });
     } else {
-      // debugLog(eventId, "is not a valid DB Id");
+      // debugLog(eventID, "is not a valid DB Id");
       res.status(404).end("Event not found");
       return;
     }
@@ -93,6 +93,11 @@ export const createEvent = async (req: Request, res: Response) => {
   //   return;
   // }
   console.log("Createing Event");
+  let permission=req.headers['x-permission'];
+  if (!  validatePermissions(MANAGER_PERMISSIONS, permission)) {
+    res.status(403).end("Access denied!not proper perrmissions");
+    return;
+  }
   // Validate request body against the defined schema
   const { error } = eventSchemaValidator.validate(req.body);
   if (error) {
@@ -117,20 +122,22 @@ export const createEvent = async (req: Request, res: Response) => {
 };
 // update event
 export const updateEvent = async (req: Request, res: Response) => {
-  // debugLog("updateEvent")
-  // if (!await validateUser(req, res, MANAGER_PERMISSIONS)) {
-  //   return;
-  // }
 
-  const eventId = req.params.id; // Extract event ID from URL
+  console.log("Createing Event");
+  let permission=req.headers['x-permission'];
+  if (!  validatePermissions(MANAGER_PERMISSIONS, permission)) {
+    res.status(403).end("Access denied!not proper perrmissions");
+    return;
+  }
+  const eventID = req.params.id; // Extract event ID from URL
 
-  if (!mongoose.Types.ObjectId.isValid(eventId)) {
-    // debugLog(eventId, "is not a valid DB Id")
+  if (!mongoose.Types.ObjectId.isValid(eventID)) {
+    // debugLog(eventID, "is not a valid DB Id")
     res.status(404).end("Event not found");
     return;
   }
 
-  const filter = { _id: new mongoose.Types.ObjectId(eventId) };
+  const filter = { _id: new mongoose.Types.ObjectId(eventID) };
   const update = { $set: req.body };
   const options = { returnOriginal: false };
   let newEvent;
@@ -143,25 +150,25 @@ export const updateEvent = async (req: Request, res: Response) => {
     return;
   }
   // Respond with the newly updated event
-  res.status(200).end(JSON.stringify({ _id: newEvent?._id || eventId })); //newEvent is null if body contains no new (schema) fields
+  res.status(200).end(JSON.stringify({ _id: newEvent?._id || eventID })); //newEvent is null if body contains no new (schema) fields
 };
 // delete event by ID
 export const deleteEvent = async (req: Request, res: Response) => {
-  // debugLog("deleteEvent")
-  // if (!await validateUser(req, res, ADMIN_PERMISSIONS)) {
-  //   return;
-  // }
-  // res.setHeader("Content-Type", "application/json");
-
-  const eventId = req.params.id; // Extract event ID from URL
+  console.log("Createing Event");
+  let permission=req.headers['x-permission'];
+  if (!  validatePermissions(MANAGER_PERMISSIONS, permission)) {
+    res.status(403).end("Access denied!not proper perrmissions");
+    return;
+  }
+  const eventID = req.params.id; // Extract event ID from URL
   // debugLog(req.url?.split("/"));
 
   try {
-    if (mongoose.Types.ObjectId.isValid(eventId)) {
-      await Event.findByIdAndDelete(eventId);
+    if (mongoose.Types.ObjectId.isValid(eventID)) {
+      await Event.findByIdAndDelete(eventID);
     } else {
       //According to Piazza, deleting non-existent item is valid
-      // debugLog(eventId, "is not a valid DB Id")
+      // debugLog(eventID, "is not a valid DB Id")
       res.status(200).end("is not a valid DB Id");
       return;
     }
@@ -174,7 +181,6 @@ export const deleteEvent = async (req: Request, res: Response) => {
 };
 
 
-
 export const reserveTicket = async (req: Request, res: Response) => {
   const { error } = reserveTicketValidator.validate(req.body);
   if (error) {
@@ -183,15 +189,15 @@ export const reserveTicket = async (req: Request, res: Response) => {
     // debugLog(error)
     return;
   }
-  let {eventId, ticketName}=req.body
-  console.log(eventId)
+  let {eventID, ticketName}=req.body
+  console.log(eventID)
   console.log(ticketName)
   const session = await mongoose.startSession();
   session.startTransaction();
   
   try {
     // Find the event by its ID and acquire a pessimistic lock
-    const event = await Event.findById(eventId).session(session).select('tickets').exec();
+    const event = await Event.findById(eventID).session(session).select('tickets').exec();
     if (!event) {
       console.error("Event not found");
       res.status(500).end("Event not found");
@@ -220,7 +226,7 @@ export const reserveTicket = async (req: Request, res: Response) => {
     // Generate a new reserved ticket
     const reservedTicket = {
       ticketId: new mongoose.Types.ObjectId(), // Generate a new ObjectId for the ticket
-      expiry: new Date(Date.now() + 60*1000*5), // Set expiry time to 48 hours from now
+      expiry: new Date(Date.now() + 60*1000*5), // set expiry in 5 minutes 
     };
 
     // Add the reserved ticket to the ticket's ReservedTickets array
@@ -243,9 +249,8 @@ export const reserveTicket = async (req: Request, res: Response) => {
   }
   res.status(200).end("sucessffuly reserver");
 };
-
-
 export const buyTicket = async (req: Request, res: Response) => {
+  console.log("buyTicket")
   const { error } = buyTicketValidator.validate(req.body);
   if (error) {
     // If validation fails, send a 400 (Bad Request) response with the validation error
@@ -253,18 +258,29 @@ export const buyTicket = async (req: Request, res: Response) => {
     // debugLog(error)
     return;
   }
-let {eventId, ticketName, reservedTicketId} = req.body;
-let authorID=req.headers['x-user'];
+  console.log("buyTicke1")
+
+let {eventID, ticketName, reservedTicketId} = req.body;
+// let authorID=req.headers['x-user'];
+let authorID="testing"
+if(!authorID){
+  authorID="testing"
+  return;
+}
 console.log(authorID);
   const session = await mongoose.startSession();
   session.startTransaction();
   
   try {
     // Find the event by its ID and acquire a pessimistic lock
-    const event = await Event.findById(eventId).session(session).select('tickets').exec();
+    console.log("before")
+    const event = await Event.findById(eventID).session(session).select('tickets').exec();
+    console.log("after")
     if (!event) {
+      console.log("buyTicke3")
       throw new Error("Event not found");
     }
+    console.log("buyTicke3")
 
     // Find the ticket by its name
     const ticketContainingReserved = event.tickets.find(ticket => ticket.name === ticketName);
@@ -292,6 +308,7 @@ console.log(authorID);
     
     console.log("Ticket bought successfully");
   } catch (error) {
+    console.log("error here")
     await session.abortTransaction();
     session.endSession();
     res.status(500).end("Internal Server Error");
@@ -300,4 +317,26 @@ console.log(authorID);
   }
   res.status(200).end("sucessffuly Bougth");
   //send message broker to make Order entity
+  Producer.prototype.sendEvent(JSON.stringify({authorID, eventID, ticketName}));
+};
+
+const validatePermissions = (requiredPermission: string, permission: any) => {
+  const permissionHierarchy = { A: 1, M: 2, W: 3, U: 4 };
+
+  const userPermission = permission;
+  const requiredPermissionLevel = permissionHierarchy[requiredPermission];
+  const userPermissionLevel = permissionHierarchy[userPermission];
+
+  // debugLog("requiredPermissions:", requiredPermission)
+  // debugLog("userPermission:", userPermission)
+
+  if (
+    requiredPermissionLevel === undefined ||
+    userPermissionLevel === undefined
+  ) {
+    return false;
+  } else {
+    const userPermissionLevel = permissionHierarchy[userPermission];
+    return userPermissionLevel <= requiredPermissionLevel;
+  }
 };

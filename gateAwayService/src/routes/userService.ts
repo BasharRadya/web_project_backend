@@ -12,6 +12,7 @@ import {
   logoutRoute,
   signupRoute,
   changePermissionRoute,
+  getPermission
 } from "./user_src/routes.js";
 
 import {
@@ -23,6 +24,7 @@ import {
   WORKER_PERMISSIONS,
   MANAGER_PERMISSIONS,
   ADMIN_PERMISSIONS,
+  GET_PERMISSION,
 } from "../const.js";
 
 dotenv.config();
@@ -72,3 +74,4 @@ userService.post(LOGIN_PATH, loginRoute);
 userService.post(LOGOUT_PATH, logoutRoute);
 userService.post(SIGNUP_PATH, signupRoute);
 userService.put(PUT_PERMISSION, changePermissionRoute);
+userService.get(GET_PERMISSION, getPermission);

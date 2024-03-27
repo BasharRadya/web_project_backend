@@ -2,6 +2,8 @@ export const LOGIN_PATH = "/user/login";
 export const LOGOUT_PATH = "/user/logout";
 export const SIGNUP_PATH = "/user/signup";
 export const PUT_PERMISSION = "/user/permission";
+export const GET_PERMISSION = "/user/getpermission";
+
 
 //permissions
 export const ADMIN_PERMISSIONS = "A";
