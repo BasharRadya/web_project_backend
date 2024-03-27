@@ -18,6 +18,8 @@ export const GET_EVENT_BY_ID = "/api/event/:id";
 export const PUT_EVENT_BY_ID = "/api/event/:id";
 export const DELETE_EVENT_BY_ID = "/api/event/:id";
 export const POST_EVENT = "/api/create";
+export const RESERVE_TICKET_EVENT = "/api/reserveticket";
+export const BUY_TICKET_EVENT = "/api/buyticket";
 
 //order paths
 export const CREATE_ORDER_PATH = "/create";

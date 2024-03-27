@@ -7,6 +7,8 @@ import {
   PUT_EVENT_BY_ID,
   DELETE_EVENT_BY_ID,
   POST_EVENT,
+  RESERVE_TICKET_EVENT,
+  BUY_TICKET_EVENT,
   ERROR_401,
 } from "../const.js";
 dotenv.config();
@@ -64,5 +66,30 @@ eventService.use(
     pathRewrite: {
       "^/event": "",
     },
+  })
+);
+eventService.use(
+  RESERVE_TICKET_EVENT,
+  createProxyMiddleware({
+    target: eventServiceHost,
+    changeOrigin: true,
+    pathRewrite: {
+      "^/event": "",
+    },
+  })
+);
+eventService.use(
+  BUY_TICKET_EVENT,
+  createProxyMiddleware({
+    target: eventServiceHost,
+    changeOrigin: true,
+    pathRewrite: {
+      "^/event": "",
+    },
+    onProxyReq: (proxyReq, req, res) => {
+      if(req['user']) {
+        proxyReq.setHeader('X-User', req['user']);
+      } 
+    }
   })
 );

@@ -11,6 +11,8 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  buyTicket,
+  reserveTicket,
 } from "./routes.js";
 import {
   GET_EVENT_BY_ID,
@@ -18,11 +20,12 @@ import {
   PUT_EVENT_BY_ID,
   DELETE_EVENT_BY_ID,
   POST_EVENT,
+  RESERVE_TICKET_EVENT,
+  BUY_TICKET_EVENT,
   ERROR_401,
 } from "./const.js";
 
 dotenv.config();
-console.log(process.env.DB_USERNAME);
 // MongoDB Atlas connection URI
 const dbUsername = process.env.DB_USERNAME || "user";
 const dbPassword = process.env.DB_PASSWORD || "pass";
@@ -59,6 +62,8 @@ eventAPI.get(GET_EVENT_BY_ID, getEventById);
 eventAPI.put(PUT_EVENT_BY_ID, updateEvent);
 eventAPI.delete(DELETE_EVENT_BY_ID, deleteEvent);
 eventAPI.post(POST_EVENT, createEvent);
+eventAPI.post(BUY_TICKET_EVENT, buyTicket);
+eventAPI.post(RESERVE_TICKET_EVENT, reserveTicket);
 eventAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });

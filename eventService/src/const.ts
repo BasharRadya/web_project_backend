@@ -3,6 +3,9 @@ export const GET_EVENT_BY_ID = "/api/event/:id";
 export const PUT_EVENT_BY_ID = "/api/event/:id";
 export const DELETE_EVENT_BY_ID = "/api/event/:id";
 export const POST_EVENT = "/api/create";
+export const RESERVE_TICKET_EVENT = "/api/reserveticket";
+export const BUY_TICKET_EVENT = "/api/buyticket";
+
 // export const GET_EVENT_BY_CATEGORY = "GET /api/event/:category";
 // export const GET_EVENT_BY_ORGANIZER = "GET /api/event/organizer/";
 

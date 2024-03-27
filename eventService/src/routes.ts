@@ -1,4 +1,5 @@
-import { Event, eventSchemaValidator } from "./models/event.js";
+import { Event, eventSchemaValidator,
+  reserveTicketValidator,buyTicketValidator } from "./models/event.js";
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
@@ -170,4 +171,133 @@ export const deleteEvent = async (req: Request, res: Response) => {
     return;
   }
   res.status(200).end();
+};
+
+
+
+export const reserveTicket = async (req: Request, res: Response) => {
+  const { error } = reserveTicketValidator.validate(req.body);
+  if (error) {
+    // If validation fails, send a 400 (Bad Request) response with the validation error
+    res.status(400).end("Invalid body in create event");
+    // debugLog(error)
+    return;
+  }
+  let {eventId, ticketName}=req.body
+  console.log(eventId)
+  console.log(ticketName)
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    // Find the event by its ID and acquire a pessimistic lock
+    const event = await Event.findById(eventId).session(session).select('tickets').exec();
+    if (!event) {
+      console.error("Event not found");
+      res.status(500).end("Event not found");
+      return;
+    }
+
+    // Find the ticket with the provided name
+    const ticket = event.tickets.find(t => t.name === ticketName);
+    if (!ticket) {
+      console.error("Ticket not found");
+      res.status(500).end("Ticket not found");
+
+      return;
+    }
+
+    // Check if the available quantity of the ticket is sufficient
+    const numReservedOfThisTicketType = ticket.ReservedTickets.length;
+
+    if (ticket.quantity - numReservedOfThisTicketType <= 0) {
+      console.error("Insufficient quantity available for reservation");
+      res.status(500).end("Insufficient quantity available for reservation");
+
+      return;
+    }
+
+    // Generate a new reserved ticket
+    const reservedTicket = {
+      ticketId: new mongoose.Types.ObjectId(), // Generate a new ObjectId for the ticket
+      expiry: new Date(Date.now() + 60*1000*5), // Set expiry time to 48 hours from now
+    };
+
+    // Add the reserved ticket to the ticket's ReservedTickets array
+    ticket.ReservedTickets.push(reservedTicket);
+
+    // Save the updated event
+    await event.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    console.log("Ticket reserved successfully");
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error reserving ticket:", error);
+    res.status(500).end("Internal Server Error");
+    console.error("Error in deleting event:", error);
+    return;
+  }
+  res.status(200).end("sucessffuly reserver");
+};
+
+
+export const buyTicket = async (req: Request, res: Response) => {
+  const { error } = buyTicketValidator.validate(req.body);
+  if (error) {
+    // If validation fails, send a 400 (Bad Request) response with the validation error
+    res.status(400).end("Invalid body in create event");
+    // debugLog(error)
+    return;
+  }
+let {eventId, ticketName, reservedTicketId} = req.body;
+let authorID=req.headers['x-user'];
+console.log(authorID);
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    // Find the event by its ID and acquire a pessimistic lock
+    const event = await Event.findById(eventId).session(session).select('tickets').exec();
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    // Find the ticket by its name
+    const ticketContainingReserved = event.tickets.find(ticket => ticket.name === ticketName);
+    if (!ticketContainingReserved) {
+      throw new Error("Ticket containing reserved ticket not found");
+    }
+
+    // Find the reserved ticket index
+    const reservedTicketIndex = ticketContainingReserved.ReservedTickets.findIndex(rt => rt.ticketId.equals(reservedTicketId));
+    if (reservedTicketIndex === -1) {
+      throw new Error("Reserved ticket not found");
+    }
+
+    // Remove the reserved ticket
+    ticketContainingReserved.ReservedTickets.splice(reservedTicketIndex, 1);
+
+    // Increment the available quantity of the ticket
+    ticketContainingReserved.quantity--;
+
+    // Save the updated event
+    await event.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+    
+    console.log("Ticket bought successfully");
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(500).end("Internal Server Error");
+    console.error("Error in deleting event:", error);
+    return;
+  }
+  res.status(200).end("sucessffuly Bougth");
+  //send message broker to make Order entity
 };

@@ -15,8 +15,20 @@ const eventSchema = new mongoose.Schema(
         name: String,
         quantity: Number,
         price: Number,
+    ReservedTickets: [
+      {
+        ticketId: {
+          type: mongoose.Schema.Types.ObjectId,
+          index: true,
+        },
+        expiry: {
+          type: Date,
+          expires: 0, // This sets the TTL index
+        },
       },
     ],
+  }
+  ],
   },
   {
     collection: "events_p",
@@ -42,4 +54,13 @@ export const eventSchemaValidator = Joi.object({
       }).unknown(true)
     )
     .required(),
+}).unknown(true);
+export const buyTicketValidator = Joi.object({
+  eventId: Joi.string().required(),
+  ticketName: Joi.string().required(),
+  reservedTicketId: Joi.string().required(),
+}).unknown(true);
+export const reserveTicketValidator = Joi.object({
+  eventId: Joi.string().required(),
+  ticketName: Joi.string().required(),
 }).unknown(true);
