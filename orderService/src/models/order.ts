@@ -18,3 +18,7 @@ export const orderDetailsValidator = Joi.object({
   eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
 }).unknown(true);
+export const orderDetailsValidatorRoute = Joi.object({
+  eventID: Joi.string().required(),
+  ticketName: Joi.string().required(),
+}).unknown(true);

@@ -1,4 +1,4 @@
-import { Order, orderDetailsValidator } from "./models/order.js";
+import { Order, orderDetailsValidator ,orderDetailsValidatorRoute} from "./models/order.js";
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
@@ -37,7 +37,7 @@ export const createOrder = async (item) => {
 export async function createOrderRoute(req: Request, res: Response) {
   // **** validate req.body
   console.log("createOrderRoute");
-  const { error } = orderDetailsValidator.validate(req.body);
+  const { error } = orderDetailsValidatorRoute.validate(req.body);
   if (error) {
     return res.status(400).end("Invalid request body format");
     return;

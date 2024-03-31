@@ -152,6 +152,7 @@ export const updateEvent = async (req: Request, res: Response) => {
   // Respond with the newly updated event
   res.status(200).end(JSON.stringify({ _id: newEvent?._id || eventID })); //newEvent is null if body contains no new (schema) fields
 };
+
 // delete event by ID
 export const deleteEvent = async (req: Request, res: Response) => {
   console.log("Createing Event");
