@@ -16,7 +16,7 @@ export class Producer {
     if (!this.channel) {
       await this.createChannel();
     }
-    const exchange = "order_exchange";
+    const exchange = "reservation_exchange";
     // create the exchange if it doesn't exist
     await this.channel.assertExchange(exchange, "fanout", { durable: false });
     // publish the message to the exchange

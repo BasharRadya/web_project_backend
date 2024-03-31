@@ -7,6 +7,7 @@ import { check_admin_in_db, userService } from "./routes/userService.js";
 import { eventService } from "./routes/eventService.js";
 import { orderService } from "./routes/orderService.js";
 import { commentService } from "./routes/commentService.js";
+import { reservationService } from "./routes/reservationService.js";
 
 dotenv.config();
 const port = process.env.PORT || 3001;
@@ -27,7 +28,8 @@ gateaway.use("/order", verifyToken, orderService);
 gateaway.use("/comment", verifyToken, commentService);
 //event service
 gateaway.use("/event", verifyToken, eventService);
-
+//reservation service
+gateaway.use("/reservation", verifyToken, reservationService);
 
 //Root route for HTML of CS nerd AbO bDiR
 gateaway.get("/", (req, res) => res.end("Hello from CS nerd AbO bDiR"));

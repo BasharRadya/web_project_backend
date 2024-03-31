@@ -33,3 +33,8 @@ export const CREATE_COMMENT_PATH = "/create";
 export const GET_COMMENT_BY_EVENT_ID = "/getbycommentid/:id";
 export const GET_COMMENT_BY_USER_ID = "/getbyuserid/:id";
 
+
+//reservation paths
+export const CREATE_RESERVATION_PATH = "/create";
+export const REMOVE_RESERVATION_BY_USER_ID = "/removebyid/:id";
+export const GET_RESRVATION_BY_IDEVENT_TICKETNAME = "/getreservation/:id/:string";

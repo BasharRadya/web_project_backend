@@ -17,7 +17,7 @@ import {
   GET_ORDER_BY_EVENT_ID,
 } from "./const.js";
 
-import {consumeMessages} from "./consumer.js";
+// import {consumeMessages} from "./consumer.js";
 
 dotenv.config();
 console.log(process.env.DB_USERNAME);
@@ -65,4 +65,4 @@ orderAPI.listen(port, () => {
 });
 
 // // start consuming messages
-consumeMessages();
+// consumeMessages();

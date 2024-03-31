@@ -44,6 +44,10 @@ export async function createOrderRoute(req: Request, res: Response) {
   }
   const { eventID, ticketName } = req.body;
   let authorID=req.headers['x-user'];
+  if(!authorID){
+    console.log("authorID not found in headers");
+    authorID="6601e2fef9f7ef9b52edc4c9"
+  }
   console.log(authorID);
   const newOrder = new Order({
     authorID: authorID,
@@ -58,7 +62,8 @@ export async function createOrderRoute(req: Request, res: Response) {
     console.error("Error in validating user:", error);
     return;
   }
-  res.status(201).end("Order created");
+  console.log("Order created");
+  res.status(201).end(newOrder._id.toString());
 }
 //get all orders of a user gived userID
 export async function getOrderByUserID(req: Request, res: Response) {

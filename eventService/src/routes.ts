@@ -1,9 +1,9 @@
-import { Event, eventSchemaValidator,
-  reserveTicketValidator,buyTicketValidator } from "./models/event.js";
-import { Request, Response, NextFunction } from "express";
+import { Event, eventSchemaValidator,reservationValidatorRoute,buyTicketValidator } from "./models/event.js";
+import e, { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import axios from "axios";
 import {
   ADMIN_PERMISSIONS,
   ERROR_401,
@@ -15,9 +15,13 @@ import { Producer } from "./producer.js";
 //get the ENV variables
 dotenv.config();
 
+//not sure about this one
+axios.defaults.withCredentials = true;
+
 //this idk why!
 const secure = process.env.NODE_ENV === "production";
-
+const reservationServiceURL = process.env.RESERVATION_SERVICE_URL || "http://localhost:3013";
+const orderServiceURL = process.env.ORDER_SERVICE_URL || "http://localhost:3012";
 
 // Get all events
 export const getEvents = async (req: Request, res: Response) => {
@@ -183,73 +187,53 @@ export const deleteEvent = async (req: Request, res: Response) => {
 
 
 export const reserveTicket = async (req: Request, res: Response) => {
-  const { error } = reserveTicketValidator.validate(req.body);
+  const { error } = reservationValidatorRoute.validate(req.body);
   if (error) {
     // If validation fails, send a 400 (Bad Request) response with the validation error
     res.status(400).end("Invalid body in create event");
     // debugLog(error)
     return;
   }
-  let {eventID, ticketName}=req.body
+  let {eventID, ticketName,amount}=req.body
   console.log(eventID)
   console.log(ticketName)
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  
-  try {
-    // Find the event by its ID and acquire a pessimistic lock
-    const event = await Event.findById(eventID).session(session).select('tickets').exec();
-    if (!event) {
-      console.error("Event not found");
-      res.status(500).end("Event not found");
-      return;
-    }
-
-    // Find the ticket with the provided name
-    const ticket = event.tickets.find(t => t.name === ticketName);
+  console.log(amount)
+  // get reservations
+  try{
+    const response = await axios.get(`${reservationServiceURL}/getreservation/${eventID}/${ticketName}`);
+    const ticket = response.data;
+    console.log(ticket)
     if (!ticket) {
       console.error("Ticket not found");
       res.status(500).end("Ticket not found");
-
       return;
     }
-
     // Check if the available quantity of the ticket is sufficient
-    const numReservedOfThisTicketType = ticket.ReservedTickets.length;
-
+    const numReservedOfThisTicketType = ticket.length;
+    console.log(numReservedOfThisTicketType)
     if (ticket.quantity - numReservedOfThisTicketType <= 0) {
       console.error("Insufficient quantity available for reservation");
       res.status(500).end("Insufficient quantity available for reservation");
-
       return;
     }
-
-    // Generate a new reserved ticket
-    const reservedTicket = {
-      ticketId: new mongoose.Types.ObjectId(), // Generate a new ObjectId for the ticket
-      expiry: new Date(Date.now() + 60*1000*5), // set expiry in 5 minutes 
-    };
-
-    // Add the reserved ticket to the ticket's ReservedTickets array
-    ticket.ReservedTickets.push(reservedTicket);
-
-    // Save the updated event
-    await event.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
-
+    //send message broker to make Order entity
+    let authorID=req.headers['x-user'];
+    console.log(authorID);
+    if(!authorID){
+      console.log("no authorID")
+      authorID="6601e2fef9f7ef9b52edc4c9"
+    }
+    Producer.prototype.sendEvent(JSON.stringify({authorID, eventID,
+      ticketName,amount}));
     console.log("Ticket reserved successfully");
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     console.error("Error reserving ticket:", error);
     res.status(500).end("Internal Server Error");
-    console.error("Error in deleting event:", error);
     return;
   }
-  res.status(200).end("sucessffuly reserver");
+  res.status(200).end("sucessffuly reservered");
 };
+
 export const buyTicket = async (req: Request, res: Response) => {
   console.log("buyTicket")
   const { error } = buyTicketValidator.validate(req.body);
@@ -259,66 +243,55 @@ export const buyTicket = async (req: Request, res: Response) => {
     // debugLog(error)
     return;
   }
-  console.log("buyTicke1")
 
-let {eventID, ticketName, reservedTicketId} = req.body;
-// let authorID=req.headers['x-user'];
-let authorID="testing"
-if(!authorID){
-  authorID="testing"
-  return;
-}
-console.log(authorID);
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  
+  let {eventID, ticketName} = req.body;
+
+  let authorID=req.headers['x-user'];
+  if(!authorID){
+    console.log("no authorID")
+    authorID="6601e2fef9f7ef9b52edc4c9"
+  }
+  console.log(authorID);
+  let order_id:string=null;
   try {
     // Find the event by its ID and acquire a pessimistic lock
     console.log("before")
-    const event = await Event.findById(eventID).session(session).select('tickets').exec();
+    const event = await Event.findById(eventID)
     console.log("after")
     if (!event) {
-      console.log("buyTicke3")
       throw new Error("Event not found");
     }
-    console.log("buyTicke3")
-
     // Find the ticket by its name
     const ticketContainingReserved = event.tickets.find(ticket => ticket.name === ticketName);
     if (!ticketContainingReserved) {
       throw new Error("Ticket containing reserved ticket not found");
     }
-
-    // Find the reserved ticket index
-    const reservedTicketIndex = ticketContainingReserved.ReservedTickets.findIndex(rt => rt.ticketId.equals(reservedTicketId));
-    if (reservedTicketIndex === -1) {
-      throw new Error("Reserved ticket not found");
-    }
-
-    // Remove the reserved ticket
-    ticketContainingReserved.ReservedTickets.splice(reservedTicketIndex, 1);
-
+    const response = await axios.delete(`${reservationServiceURL}/removebyid/${authorID}`);
+    console.log('Response data:', response.data);
     // Increment the available quantity of the ticket
     ticketContainingReserved.quantity--;
-
+    //send to order API
+    const data = {
+      authorID: authorID,
+      eventID: eventID,
+      ticketName: ticketName
+  };
+    console.log(`${orderServiceURL}/create`);
+    const response2 = await axios.post(`${orderServiceURL}/create`, data);
+    console.log('Response2 data:', response2.data);
+    if(response2.status!=201){
+      throw new Error("Error in creating order");
+    }
+    order_id=response2.data;
     // Save the updated event
-    await event.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
-    
+    await event.save();
     console.log("Ticket bought successfully");
   } catch (error) {
-    console.log("error here")
-    await session.abortTransaction();
-    session.endSession();
     res.status(500).end("Internal Server Error");
-    console.error("Error in deleting event:", error);
+    console.error("Error in deleting here:", error);
     return;
   }
-  res.status(200).end("sucessffuly Bougth");
-  //send message broker to make Order entity
-  Producer.prototype.sendEvent(JSON.stringify({authorID, eventID, ticketName}));
+  res.status(200).end(order_id);
 };
 
 const validatePermissions = (requiredPermission: string, permission: any) => {
@@ -340,4 +313,4 @@ const validatePermissions = (requiredPermission: string, permission: any) => {
     const userPermissionLevel = permissionHierarchy[userPermission];
     return userPermissionLevel <= requiredPermissionLevel;
   }
-};
+};  

@@ -20,9 +20,11 @@ export const reservationValidator = Joi.object({
   authorID: Joi.string().required(),
   eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
+  amount: Joi.number().integer().min(1).required(),
 }).unknown(true);
 
 export const reservationValidatorRoute = Joi.object({
   eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
+  amount: Joi.number().integer().min(1).required(),
 }).unknown(true);

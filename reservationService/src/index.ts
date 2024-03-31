@@ -7,15 +7,17 @@ import cookieParser from "cookie-parser";
 
 import {
   createReservationRoute,
-  removeReservationByID,
+  removeReservationByUserID,
+  getReservationByEventAndType,
 } from "./routes.js";
 
 import {
   CREATE_RESERVATION_PATH,
-  REMOVE_RESERVATION_BY_EVENT_ID,
+  GET_RESRVATION_BY_IDEVENT_TICKETNAME,
+  REMOVE_RESERVATION_BY_USER_ID,
 } from "./const.js";
 
-// import {consumeMessages} from "./consumer.js";
+import {consumeMessages} from "./consumer.js";
 
 dotenv.config();
 console.log(process.env.DB_USERNAME);
@@ -52,7 +54,8 @@ reservationAPI.use(cookieParser());
 
 //routings
 reservationAPI.post(CREATE_RESERVATION_PATH, createReservationRoute);
-reservationAPI.get(REMOVE_RESERVATION_BY_EVENT_ID, removeReservationByID);
+reservationAPI.get(GET_RESRVATION_BY_IDEVENT_TICKETNAME, getReservationByEventAndType);
+reservationAPI.delete(REMOVE_RESERVATION_BY_USER_ID, removeReservationByUserID);
 reservationAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });
@@ -61,5 +64,5 @@ reservationAPI.listen(port, () => {
   console.log(`Server running! port ${port}`);
 });
 
-// // start consuming messages
-// consumeMessages();
+// start consuming messages
+consumeMessages();
