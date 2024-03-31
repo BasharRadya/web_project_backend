@@ -145,9 +145,9 @@ export const verifyToken2 = (req: Request, res: Response): string => {
    }
    try {
      let user = jwt.verify(token, secretKey) as JwtPayload;
-     // (req as any)['user'] = user.username;
      console.log(user);
-     (req as any)['user'] = user.username;
+     (req as any)['user'] = user.autherID;
+     (req as any)['permission'] = user.permission;
      console.log(req['user']);
      return user.username;
      
@@ -230,6 +230,18 @@ export const changePermissionRoute = async (req: Request, res: Response) => {
   }
   try {
     await User.updateOne({ username: username }, { permission: permission });
+    
+
+    //update token to the new permission
+    // test this did not test yet and when finish testing remove the comment
+    let athID=req['user'];
+    const token = jwt.sign({ username: username,
+      autherID:athID,
+      permission:permission }, secretKey, {
+      expiresIn: "24h",
+    });
+    res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 24 });
+
     res.status(200).end("Permission changed");
   } catch (error) {
     res.statusCode = 500;
