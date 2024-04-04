@@ -159,8 +159,9 @@ export const updateEvent = async (req: Request, res: Response) => {
 
 // delete event by ID
 export const deleteEvent = async (req: Request, res: Response) => {
-  console.log("Createing Event");
+  console.log("Deleting Event");
   let permission=req.headers['x-permission'];
+  console.log(permission)
   if (!  validatePermissions(MANAGER_PERMISSIONS, permission)) {
     res.status(403).end("Access denied!not proper perrmissions");
     return;

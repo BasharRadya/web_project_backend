@@ -3,8 +3,8 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import {
   User,
-  changePermissionValidator,
   userDetailsValidator,
+  changePermissionValidator
 } from "../../models/user.js";
 import {
   ADMIN_PERMISSIONS,
@@ -98,8 +98,7 @@ export const loginRoute = async (req: Request, res: Response) => {
   }
   console.log("user_data",user_data.id)
   const token = jwt.sign({ username: username,
-    autherID:user_data.id,
-    permission:user_data.permission }, secretKey, {
+    autherID:user_data.id }, secretKey, {
     expiresIn: "24h",
   });
   res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 24 });
@@ -114,20 +113,24 @@ export async function logoutRoute(req: Request, res: Response) {
 
   res.status(200).send("You have been successfully logged out.");
 }
-export const verifyToken = (req: Request, res: Response,next:NextFunction) => {
+export  const verifyToken =async (req: Request, res: Response,next:NextFunction) => {
  console.log("verfieing token")
   const token = req.cookies.token;
-  console.log(token)
+  // console.log(token)
   if (!token) {
     res.status(401).end("Access denied");
     return;
     }
   try {
     let user = jwt.verify(token, secretKey) as JwtPayload;
-    console.log(user);
+    let user_data: any = null;
+    user_data = await User.findById(user.autherID);
+    // console.log(user);
     (req as any)['user'] = user.autherID;
-    (req as any)['permission'] = user.permission;
+    (req as any)['permission'] = user_data.permission;
     console.log(req['user']);
+    console.log(req['permission']);
+
 
   } catch (err) {
     res.status(400).end("Invalid token");
@@ -135,24 +138,27 @@ export const verifyToken = (req: Request, res: Response,next:NextFunction) => {
   }
   next();
 };
-export const verifyToken2 = (req: Request, res: Response): string => {
+export const verifyToken2 = async  (req: Request, res: Response) : Promise<string>  =>  {
   console.log("verfieing token")
    const token = req.cookies.token;
-   console.log("token",token)
+  //  console.log("token",token)
    if (!token) {
      res.status(401).send("Access denied");
      return ERROR_401;
    }
    try {
      let user = jwt.verify(token, secretKey) as JwtPayload;
+     let user_data: any = null;
+     user_data = await User.findById(user.autherID ); 
      console.log(user);
+     console.log(user_data);
      (req as any)['user'] = user.autherID;
-     (req as any)['permission'] = user.permission;
+     (req as any)['permission'] = user_data.permission;
      console.log(req['user']);
      return user.username;
      
    } catch (err) {
-     res.status(400).end("Invalid token");
+     res.status(400).end("Invalid token2");
      return ERROR_401;
    }
  };
@@ -162,7 +168,8 @@ export const validateUser = async (
   requiredPermission: string
 ) => {
   //check token and get the username
-  const username = verifyToken2(req, res);
+  const username = await verifyToken2(req, res);
+  console.log("username",username)
   if (username === ERROR_401) {
     res.status(401).end("Invalid Token");
     return false;
@@ -182,6 +189,8 @@ export const validateUser = async (
     return false;
   }
   //check if user has the required permission
+  console.log("requiredPermission",requiredPermission)
+  console.log("user_data.permission",user_data.permission)
   if (!validatePermissions(requiredPermission, user_data)) {
     res.status(403).end("Access denied!not proper perrmissions");
     return false;
@@ -221,7 +230,7 @@ export const changePermissionRoute = async (req: Request, res: Response) => {
     return;
   }
   const { username, permission } = req.body;
-  if (!["W", "M"].includes(permission)) {
+  if (!["U","W", "M"].includes(permission)) {
     res.statusCode = 400;
     res.end(
       JSON.stringify({ message: "Invalid requested permission in body" })
@@ -232,15 +241,15 @@ export const changePermissionRoute = async (req: Request, res: Response) => {
     await User.updateOne({ username: username }, { permission: permission });
     
 
-    //update token to the new permission
-    // test this did not test yet and when finish testing remove the comment
-    let athID=req['user'];
-    const token = jwt.sign({ username: username,
-      autherID:athID,
-      permission:permission }, secretKey, {
-      expiresIn: "24h",
-    });
-    res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 24 });
+    // //update token to the new permission
+    // // test this did not test yet and when finish testing remove the comment
+    // let athID=req['user'];
+    // const token = jwt.sign({ username: username,
+    //   autherID:athID,
+    //   permission:permission }, secretKey, {
+    //   expiresIn: "24h",
+    // });
+    // res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 24 });
 
     res.status(200).end("Permission changed");
   } catch (error) {

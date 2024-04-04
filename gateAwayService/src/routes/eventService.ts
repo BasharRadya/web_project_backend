@@ -25,6 +25,10 @@ eventService.use(
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
+    },onProxyReq: (proxyReq, req, res) => {
+      if(req['user'] || req['permission']) {
+        proxyReq.setHeader('X-permission', req['permission']);
+      } 
     },
   })
 );
@@ -35,12 +39,11 @@ eventService.use(
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
-    },
-    onProxyReq: (proxyReq, req, res) => {
-      if(req['user']) {
+    },onProxyReq: (proxyReq, req, res) => {
+      if(req['user'] || req['permission']) {
         proxyReq.setHeader('X-permission', req['permission']);
       } 
-    }
+    },
   })
 );
 eventService.use(
@@ -50,18 +53,22 @@ eventService.use(
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
+    },onProxyReq: (proxyReq, req, res) => {
+      if(req['user'] || req['permission']) {
+        proxyReq.setHeader('X-permission', req['permission']);
+      } 
     },
   })
 );
 eventService.use(
-  DELETE_EVENT_BY_ID,
+  "here",
   createProxyMiddleware({
     target: eventServiceHost,
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
     },onProxyReq: (proxyReq, req, res) => {
-      if(req['user']) {
+      if(req['user'] || req['permission']) {
         proxyReq.setHeader('X-permission', req['permission']);
       } 
     },
@@ -75,7 +82,7 @@ eventService.use(
     pathRewrite: {
       "^/event": "",
     },onProxyReq: (proxyReq, req, res) => {
-      if(req['user']) {
+      if(req['user'] || req['permission']) {
         proxyReq.setHeader('X-permission', req['permission']);
       } 
     },
@@ -88,6 +95,10 @@ eventService.use(
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
+    },onProxyReq: (proxyReq, req, res) => {
+      if(req['user'] || req['permission']) {
+        proxyReq.setHeader('X-permission', req['permission']);
+      } 
     },
   })
 );
@@ -98,11 +109,10 @@ eventService.use(
     changeOrigin: true,
     pathRewrite: {
       "^/event": "",
-    },
-    onProxyReq: (proxyReq, req, res) => {
-      if(req['user']) {
-        proxyReq.setHeader('X-User', req['user']);
+    },onProxyReq: (proxyReq, req, res) => {
+      if(req['user'] || req['permission']) {
+        proxyReq.setHeader('X-permission', req['permission']);
       } 
-    }
+    },
   })
 );
