@@ -21,3 +21,7 @@ export const changePermissionValidator = Joi.object({
   username: Joi.string().required(),
   permission: Joi.string().required(),
 }).unknown(true);
+
+export const getPermissionsValidator = Joi.object({
+  username: Joi.string().required(),
+}).unknown(true);
