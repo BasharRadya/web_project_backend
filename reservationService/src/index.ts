@@ -27,7 +27,7 @@ const dbPassword = process.env.DB_PASSWORD || "pass";
 const dbClusterName = process.env.DB_CLUSER_NAME || "cluster";
 const dbUri = `mongodb+srv://${dbUsername}:${dbPassword}@${dbClusterName}.lwmknqi.mongodb.net/hw2?retryWrites=true&w=majority`;
 const secretKey = process.env.SECRET_KEY || "your_secret_key";
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 console.log("dbUri", dbUri);
 // Connect to MongoDB Atlas
@@ -59,6 +59,11 @@ reservationAPI.delete(REMOVE_RESERVATION_BY_USER_ID, removeReservationByUserID);
 reservationAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });
+
+reservationAPI.use((req, res, next) => {
+  res.status(404).end("Not found");
+});
+
 //listening
 reservationAPI.listen(port, () => {
   console.log(`Server running! port ${port}`);

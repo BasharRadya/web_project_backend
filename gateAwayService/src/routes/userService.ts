@@ -12,8 +12,8 @@ import {
   logoutRoute,
   signupRoute,
   changePermissionRoute,
-  getPermission
-} from "./user_src/routes.js";
+  getPermissionRoute
+} from "./auth.js";
 
 import {
   LOGIN_PATH,
@@ -74,4 +74,4 @@ userService.post(LOGIN_PATH, loginRoute);
 userService.post(LOGOUT_PATH, logoutRoute);
 userService.post(SIGNUP_PATH, signupRoute);
 userService.put(PUT_PERMISSION, changePermissionRoute);
-userService.get(GET_PERMISSION, getPermission);
+userService.get(GET_PERMISSION, getPermissionRoute);

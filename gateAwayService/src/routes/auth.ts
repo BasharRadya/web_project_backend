@@ -1,17 +1,16 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import {
   User,
   changePermissionValidator,
-  getPermissionsValidator,
   userDetailsValidator,
-} from "../../models/user.js";
+} from "../models/user.js";
 import {
   ADMIN_PERMISSIONS,
   USER_PERMISSIONS,
   ERROR_401,
-} from "../../const.js";
+} from "../const.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -96,6 +95,25 @@ export async function logoutRoute(req: Request, res: Response) {
   res.status(200).send("You have been successfully logged out.");
 }
 
+export const verifyTokenMiddleware = (req: Request, res: Response, next: NextFunction): string => {
+  const token = req.cookies.token;
+  if (!token) {
+    res.status(401).end("No valid session token found.");
+    return ERROR_401;
+  }
+
+  try {
+    let user = jwt.verify(token, secretKey) as JwtPayload;
+    req['user'] = user.username;
+    console.log("user", user);
+    next();
+    return user.username;
+  } catch (err) {
+    res.status(400).end("Invalid token");
+    return ERROR_401;
+  }
+};
+
 export const verifyToken = (req: Request, res: Response): string => {
   const token = req.cookies.token;
   if (!token) {
@@ -105,6 +123,8 @@ export const verifyToken = (req: Request, res: Response): string => {
 
   try {
     let user = jwt.verify(token, secretKey) as JwtPayload;
+    req['user'] = user.username;
+    console.log("user", user);
     return user.username;
   } catch (err) {
     res.status(400).end("Invalid token");
@@ -189,17 +209,14 @@ export const changePermissionRoute = async (req: Request, res: Response) => {
   res.status(200).end("Permission changed");
 };
 
-export const getPermission = async (req: Request, res: Response) => {
-  if (!(await validateUser(req, res, USER_PERMISSIONS))) {
-    return;
-  }
+export const getPermissionRoute = async (req: Request, res: Response) => {
+  //TODO: assess whether we need to pass token in inter-service communication
+  
+  // if (!(await validateUser(req, res, USER_PERMISSIONS))) {
+  //   return;
+  // }
 
-  const { error } = getPermissionsValidator.validate(req.body);
-  if (error) {
-    return res.status(400).end("Invalid request body");
-  }
-
-  const { username } = req.body;
+  const username = req.params.id
 
   let userData: any = null;
   try {
@@ -210,7 +227,7 @@ export const getPermission = async (req: Request, res: Response) => {
   }
 
   if (!userData) {
-    return res.status(404).end("Requested user not found");;
+    return res.status(404).end("Requested user not found");
   }
 
   res.status(200).end(JSON.stringify({ permission: userData.permission }));

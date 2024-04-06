@@ -1,8 +1,8 @@
-export const LOGIN_PATH = "/user/login";
-export const LOGOUT_PATH = "/user/logout";
-export const SIGNUP_PATH = "/user/signup";
-export const PUT_PERMISSION = "/user/permission";
-export const GET_PERMISSION = "/user/getpermission";
+export const LOGIN_PATH = "/login";
+export const LOGOUT_PATH = "/logout";
+export const SIGNUP_PATH = "/signup";
+export const PUT_PERMISSION = "/permission";
+export const GET_PERMISSION = "/permission/:id";
 
 
 //permissions

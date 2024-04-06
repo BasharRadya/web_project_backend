@@ -1,9 +1,9 @@
 import express from "express";
+import cors from "cors";
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import { Event } from "./models/event.js";
 
 import {
   getEventById,
@@ -23,8 +23,11 @@ import {
   RESERVE_TICKET_EVENT,
   BUY_TICKET_EVENT,
   ERROR_401,
+  MANAGER_PERMISSIONS,
+  USER_PERMISSIONS,
 } from "./const.js";
 import { Producer } from "./producer.js";
+import { checkPermissionsMiddleware } from "./auth.js";
 
 
 dotenv.config();
@@ -33,9 +36,7 @@ const dbUsername = process.env.DB_USERNAME || "user";
 const dbPassword = process.env.DB_PASSWORD || "pass";
 const dbClusterName = process.env.DB_CLUSER_NAME || "cluster";
 const dbUri = `mongodb+srv://${dbUsername}:${dbPassword}@${dbClusterName}.lwmknqi.mongodb.net/hw2?retryWrites=true&w=majority`;
-const secretKey = process.env.SECRET_KEY || "your_secret_key";
-const port = process.env.PORT || 3003;
-
+const port = process.env.PORT;
 
 console.log("dbUri", dbUri);
 // Connect to MongoDB Atlas
@@ -47,6 +48,14 @@ await mongoose.connect(dbUri, {
 
 
 const eventAPI = express();
+
+const requestLoggerMiddleware = (req, res, next) => {
+  const log = `[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`;
+  console.log(log);
+  next();
+};
+
+eventAPI.use(requestLoggerMiddleware);
 
 
 //parse json
@@ -61,17 +70,36 @@ eventAPI.use((err: any, req: Request, res: Response, next: NextFunction) => {
 //parse cookies
 eventAPI.use(cookieParser());
 
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [process.env.FRONTEND_URL];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation'));
+    }
+  },
+  credentials: true,
+};
+
+eventAPI.use(cors(corsOptions));
+
 //routings
-eventAPI.get(GET_EVENTS, getEvents);
-eventAPI.get(GET_EVENT_BY_ID, getEventById);
-eventAPI.put(PUT_EVENT_BY_ID, updateEvent);
-eventAPI.delete(DELETE_EVENT_BY_ID, deleteEvent);
-eventAPI.post(POST_EVENT, createEvent);
-eventAPI.post(BUY_TICKET_EVENT, buyTicket);
-eventAPI.post(RESERVE_TICKET_EVENT, reserveTicket);
+eventAPI.get(GET_EVENTS, await checkPermissionsMiddleware(USER_PERMISSIONS), getEvents);
+eventAPI.get(GET_EVENT_BY_ID, await checkPermissionsMiddleware(USER_PERMISSIONS), getEventById);
+eventAPI.put(PUT_EVENT_BY_ID, await checkPermissionsMiddleware(MANAGER_PERMISSIONS), updateEvent);
+eventAPI.delete(DELETE_EVENT_BY_ID, await checkPermissionsMiddleware(MANAGER_PERMISSIONS), deleteEvent);
+eventAPI.post(POST_EVENT, await checkPermissionsMiddleware(MANAGER_PERMISSIONS), createEvent);
+eventAPI.post(BUY_TICKET_EVENT, await checkPermissionsMiddleware(USER_PERMISSIONS), buyTicket);
+eventAPI.post(RESERVE_TICKET_EVENT, await checkPermissionsMiddleware(USER_PERMISSIONS), reserveTicket);
 eventAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });
+
+eventAPI.use((req, res, next) => {
+  res.status(404).end("Not found");
+});
+
 //listening
 eventAPI.listen(port, () => {
   console.log(`Server running! port ${port}`);

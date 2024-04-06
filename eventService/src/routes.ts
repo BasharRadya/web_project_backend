@@ -1,4 +1,4 @@
-import { Event, eventSchemaValidator,reservationValidatorRoute,buyTicketValidator } from "./models/event.js";
+import { Event, eventSchemaValidator, reservationValidatorRoute, buyTicketValidator } from "./models/event.js";
 import e, { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
@@ -92,16 +92,6 @@ export const getEventById = async (req: Request, res: Response) => {
 };
 // create new event
 export const createEvent = async (req: Request, res: Response) => {
-  // debugLog("createEvent")
-  // if (!await validateUser(req, res, MANAGER_PERMISSIONS)) {
-  //   return;
-  // }
-  console.log("Createing Event");
-  let permission=req.headers['x-permission'];
-  if (!  validatePermissions(MANAGER_PERMISSIONS, permission)) {
-    res.status(403).end("Access denied!not proper perrmissions");
-    return;
-  }
   // Validate request body against the defined schema
   const { error } = eventSchemaValidator.validate(req.body);
   if (error) {
@@ -124,15 +114,9 @@ export const createEvent = async (req: Request, res: Response) => {
   // Respond with the newly created event
   res.status(201).end(JSON.stringify({ _id: savedEvent._id }));
 };
+
 // update event
 export const updateEvent = async (req: Request, res: Response) => {
-
-  console.log("Createing Event");
-  let permission=req.headers['x-permission'];
-  if (!  validatePermissions(MANAGER_PERMISSIONS, permission)) {
-    res.status(403).end("Access denied!not proper perrmissions");
-    return;
-  }
   const eventID = req.params.id; // Extract event ID from URL
 
   if (!mongoose.Types.ObjectId.isValid(eventID)) {
@@ -159,13 +143,7 @@ export const updateEvent = async (req: Request, res: Response) => {
 
 // delete event by ID
 export const deleteEvent = async (req: Request, res: Response) => {
-  console.log("Deleting Event");
-  let permission=req.headers['x-permission'];
-  console.log(permission)
-  if (!  validatePermissions(MANAGER_PERMISSIONS, permission)) {
-    res.status(403).end("Access denied!not proper perrmissions");
-    return;
-  }
+  
   const eventID = req.params.id; // Extract event ID from URL
   // debugLog(req.url?.split("/"));
 
@@ -195,12 +173,12 @@ export const reserveTicket = async (req: Request, res: Response) => {
     // debugLog(error)
     return;
   }
-  let {eventID, ticketName,amount}=req.body
+  let { eventID, ticketName, amount } = req.body
   console.log(eventID)
   console.log(ticketName)
   console.log(amount)
   // get reservations
-  try{
+  try {
     const response = await axios.get(`${reservationServiceURL}/getreservation/${eventID}/${ticketName}`);
     const ticket = response.data;
     console.log(ticket)
@@ -218,14 +196,16 @@ export const reserveTicket = async (req: Request, res: Response) => {
       return;
     }
     //send message broker to make Order entity
-    let authorID=req.headers['x-user'];
+    let authorID = req.headers['x-user'];
     console.log(authorID);
-    if(!authorID){
+    if (!authorID) {
       console.log("no authorID")
-      authorID="6601e2fef9f7ef9b52edc4c9"
+      authorID = "6601e2fef9f7ef9b52edc4c9"
     }
-    Producer.prototype.sendEvent(JSON.stringify({authorID, eventID,
-      ticketName,amount}));
+    Producer.prototype.sendEvent(JSON.stringify({
+      authorID, eventID,
+      ticketName, amount
+    }));
     console.log("Ticket reserved successfully");
   } catch (error) {
     console.error("Error reserving ticket:", error);
@@ -245,15 +225,15 @@ export const buyTicket = async (req: Request, res: Response) => {
     return;
   }
 
-  let {eventID, ticketName} = req.body;
+  let { eventID, ticketName } = req.body;
 
-  let authorID=req.headers['x-user'];
-  if(!authorID){
+  let authorID = req.headers['x-user'];
+  if (!authorID) {
     console.log("no authorID")
-    authorID="6601e2fef9f7ef9b52edc4c9"
+    authorID = "6601e2fef9f7ef9b52edc4c9"
   }
   console.log(authorID);
-  let order_id:string=null;
+  let order_id: string = null;
   try {
     // Find the event by its ID and acquire a pessimistic lock
     console.log("before")
@@ -276,14 +256,14 @@ export const buyTicket = async (req: Request, res: Response) => {
       authorID: authorID,
       eventID: eventID,
       ticketName: ticketName
-  };
+    };
     console.log(`${orderServiceURL}/create`);
     const response2 = await axios.post(`${orderServiceURL}/create`, data);
     console.log('Response2 data:', response2.data);
-    if(response2.status!=201){
+    if (response2.status != 201) {
       throw new Error("Error in creating order");
     }
-    order_id=response2.data;
+    order_id = response2.data;
     // Save the updated event
     await event.save();
     console.log("Ticket bought successfully");
