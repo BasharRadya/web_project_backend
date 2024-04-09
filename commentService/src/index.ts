@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { Comment } from "./models/comment.js";
 import * as bcrypt from "bcrypt";
+import cors from "cors";
+import { checkPermissionsMiddleware } from "./auth.js";
 
 import {
   createCommentRoute,
@@ -16,6 +18,10 @@ import {
   CREATE_COMMENT_PATH,
   GET_COMMENT_BY_EVENT_ID,
   GET_COMMENT_BY_USER_ID,
+  USER_PERMISSIONS,
+  MANAGER_PERMISSIONS,
+  WORKER_PERMISSIONS,
+  ADMIN_PERMISSIONS,
 } from "./const.js";
 
 dotenv.config();
@@ -38,6 +44,13 @@ mongoose.connect(dbUri, {
 const commentAPI = express();
 
 //middile wares
+const requestLoggerMiddleware = (req, res, next) => {
+  const log = `[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`;
+  console.log(log);
+  next();
+};
+
+commentAPI.use(requestLoggerMiddleware);
 
 //parse json
 commentAPI.use(express.json());
@@ -51,10 +64,25 @@ commentAPI.use((err: any, req: Request, res: Response, next: NextFunction) => {
 //parse cookies
 commentAPI.use(cookieParser());
 
+
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [process.env.FRONTEND_URL];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation'));
+    }
+  },
+  credentials: true,
+};
+
+commentAPI.use(cors(corsOptions));
 //routings
-commentAPI.post(CREATE_COMMENT_PATH, createCommentRoute);
-commentAPI.get(GET_COMMENT_BY_USER_ID, getCommentByUserID);
-commentAPI.get(GET_COMMENT_BY_EVENT_ID, getCommentByEventID);
+commentAPI.post(CREATE_COMMENT_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createCommentRoute);
+commentAPI.get(GET_COMMENT_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getCommentByUserID);
+commentAPI.get(GET_COMMENT_BY_EVENT_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getCommentByEventID);
 commentAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });

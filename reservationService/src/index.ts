@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 // import { Reservation } from "./models/reservation.js";
+import cors from "cors";
+import { checkPermissionsMiddleware } from "./auth.js";
 
 import {
   createReservationRoute,
@@ -15,6 +17,10 @@ import {
   CREATE_RESERVATION_PATH,
   GET_RESRVATION_BY_IDEVENT_TICKETNAME,
   REMOVE_RESERVATION_BY_USER_ID,
+  WORKER_PERMISSIONS,
+  USER_PERMISSIONS,
+  ADMIN_PERMISSIONS,
+  MANAGER_PERMISSIONS,
 } from "./const.js";
 
 import {consumeMessages} from "./consumer.js";
@@ -39,6 +45,13 @@ await mongoose.connect(dbUri, {
 const reservationAPI = express();
 
 //middile wares
+const requestLoggerMiddleware = (req, res, next) => {
+  const log = `[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`;
+  console.log(log);
+  next();
+};
+
+reservationAPI.use(requestLoggerMiddleware);
 
 //parse json
 reservationAPI.use(express.json());
@@ -52,10 +65,27 @@ reservationAPI.use((err: any, req: Request, res: Response, next: NextFunction) =
 //parse cookies
 reservationAPI.use(cookieParser());
 
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [process.env.FRONTEND_URL];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation'));
+    }
+  },
+  credentials: true,
+};
+
+reservationAPI.use(cors(corsOptions));
+
+
+
 //routings
-reservationAPI.post(CREATE_RESERVATION_PATH, createReservationRoute);
-reservationAPI.get(GET_RESRVATION_BY_IDEVENT_TICKETNAME, getReservationByEventAndType);
-reservationAPI.delete(REMOVE_RESERVATION_BY_USER_ID, removeReservationByUserID);
+reservationAPI.post(CREATE_RESERVATION_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createReservationRoute);
+reservationAPI.get(GET_RESRVATION_BY_IDEVENT_TICKETNAME,await checkPermissionsMiddleware(USER_PERMISSIONS), getReservationByEventAndType);
+reservationAPI.delete(REMOVE_RESERVATION_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), removeReservationByUserID);
 reservationAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });
