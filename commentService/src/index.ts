@@ -80,9 +80,9 @@ const corsOptions = {
 
 commentAPI.use(cors(corsOptions));
 //routings
-commentAPI.post(CREATE_COMMENT_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createCommentRoute);
-commentAPI.get(GET_COMMENT_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getCommentByUserID);
-commentAPI.get(GET_COMMENT_BY_EVENT_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getCommentByEventID);
+commentAPI.post(CREATE_COMMENT_PATH, await checkPermissionsMiddleware(USER_PERMISSIONS), createCommentRoute);
+commentAPI.get(GET_COMMENT_BY_USER_ID, await checkPermissionsMiddleware(USER_PERMISSIONS), getCommentByUserID);
+commentAPI.get(GET_COMMENT_BY_EVENT_ID, await checkPermissionsMiddleware(USER_PERMISSIONS), getCommentByEventID);
 commentAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });

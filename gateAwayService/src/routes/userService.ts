@@ -6,13 +6,15 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { User } from "../models/user.js";
 import * as bcrypt from "bcrypt";
+import {checkPermissionsMiddleware} from './auth.js'
 
 import {
   loginRoute,
   logoutRoute,
   signupRoute,
   changePermissionRoute,
-  getPermissionRoute
+  getPermissionRoute,
+  verifyTokenMiddleware
 } from "./auth.js";
 
 import {
@@ -73,5 +75,5 @@ userService.use(
 userService.post(LOGIN_PATH, loginRoute);
 userService.post(LOGOUT_PATH, logoutRoute);
 userService.post(SIGNUP_PATH, signupRoute);
-userService.put(PUT_PERMISSION, changePermissionRoute);
+userService.put(PUT_PERMISSION, verifyTokenMiddleware, await checkPermissionsMiddleware(ADMIN_PERMISSIONS), changePermissionRoute);
 userService.get(GET_PERMISSION, getPermissionRoute);

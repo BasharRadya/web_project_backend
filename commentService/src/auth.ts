@@ -1,7 +1,9 @@
 import axios from "axios";
 import { NextFunction, Request, Response } from "express";
 import { debugLog } from "./debug.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 const gatewayUrl = process.env.GATEWAY_URL;
 
 export const checkPermissionsMiddleware = async (requiredPermission: string) => {
@@ -14,6 +16,7 @@ export const checkPermissionsMiddleware = async (requiredPermission: string) => 
     }
 
     try {
+      console.log(gatewayUrl)
       const response = await axios.get(`${gatewayUrl}/user/permission/${username}`);
       const { permission } = response.data;
       if (!permission) {
