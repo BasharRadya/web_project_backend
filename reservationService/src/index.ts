@@ -11,12 +11,14 @@ import {
   createReservationRoute,
   removeReservationByUserID,
   getReservationByEventAndType,
+  getReservationByUserID,
 } from "./routes.js";
 
 import {
   CREATE_RESERVATION_PATH,
   GET_RESRVATION_BY_IDEVENT_TICKETNAME,
   REMOVE_RESERVATION_BY_USER_ID,
+  GET_RESERVATION_BY_USER_ID,
   WORKER_PERMISSIONS,
   USER_PERMISSIONS,
   ADMIN_PERMISSIONS,
@@ -85,6 +87,7 @@ reservationAPI.use(cors(corsOptions));
 //routings
 reservationAPI.post(CREATE_RESERVATION_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createReservationRoute);
 reservationAPI.get(GET_RESRVATION_BY_IDEVENT_TICKETNAME,await checkPermissionsMiddleware(USER_PERMISSIONS), getReservationByEventAndType);
+reservationAPI.get(GET_RESERVATION_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getReservationByEventAndType);
 reservationAPI.delete(REMOVE_RESERVATION_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), removeReservationByUserID);
 reservationAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");

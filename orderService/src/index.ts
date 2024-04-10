@@ -10,12 +10,16 @@ import {
   createOrderRoute,
   getOrderByUserID,
   getOrderByEventID,
+  getOrderByID,
+  deleteByID,
 } from "./routes.js";
 
 import {
   CREATE_ORDER_PATH,
   GET_ORDER_BY_USER_ID,
   GET_ORDER_BY_EVENT_ID,
+  DELETE_ORDER_BY_ID,
+  GET_ORDER_BY_ID,
   WORKER_PERMISSIONS,
   ADMIN_PERMISSIONS,
   MANAGER_PERMISSIONS,
@@ -85,6 +89,9 @@ orderAPI.use(cors(corsOptions));
 orderAPI.post(CREATE_ORDER_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createOrderRoute);
 orderAPI.get(GET_ORDER_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByUserID);
 orderAPI.get(GET_ORDER_BY_EVENT_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByEventID);
+orderAPI.get(GET_ORDER_BY_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByID);
+orderAPI.delete(DELETE_ORDER_BY_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), deleteByID);
+
 orderAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });

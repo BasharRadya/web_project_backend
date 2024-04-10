@@ -1,5 +1,6 @@
 export const CREATE_RESERVATION_PATH = "/create";
 export const REMOVE_RESERVATION_BY_USER_ID = "/removebyid/:id";
+export const GET_RESERVATION_BY_USER_ID = "/getbyid/:id";
 export const GET_RESRVATION_BY_IDEVENT_TICKETNAME = "/getreservation/:id/:string";
 
 

@@ -12,6 +12,7 @@ import {
   WORKER_PERMISSIONS,
 } from "./const.js";
 import { Producer } from "./producer.js";
+import { error } from "console";
 //get the ENV variables
 dotenv.config();
 
@@ -164,6 +165,13 @@ export const deleteEvent = async (req: Request, res: Response) => {
   res.status(200).end();
 };
 
+function sumQuantities(jsonList) {
+  let sum = 0;
+  for (let i = 0; i < jsonList.length; i++) {
+      sum += jsonList[i].quantity;
+  }
+  return sum;
+}
 
 export const reserveTicket = async (req: Request, res: Response) => {
   const { error } = reservationValidatorRoute.validate(req.body);
@@ -188,9 +196,19 @@ export const reserveTicket = async (req: Request, res: Response) => {
       return;
     }
     // Check if the available quantity of the ticket is sufficient
-    const numReservedOfThisTicketType = ticket.length;
+    const numReservedOfThisTicketType =  sumQuantities(ticket)
     console.log(numReservedOfThisTicketType)
-    if (ticket.quantity - numReservedOfThisTicketType <= 0) {
+    const event = await Event.findById(eventID)
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    // Find the ticket by its name
+    const realTicket = event.tickets.find(ticket => ticket.name === ticketName);
+    if (!realTicket) {
+      throw new Error("Ticket containing reserved ticket not found");
+    }
+
+    if (realTicket.quantity - numReservedOfThisTicketType <= 0) {
       console.error("Insufficient quantity available for reservation");
       res.status(500).end("Insufficient quantity available for reservation");
       return;
@@ -225,8 +243,10 @@ export const buyTicket = async (req: Request, res: Response) => {
     return;
   }
 
-  let { eventID, ticketName } = req.body;
-
+  let { eventID, ticketName ,cc,holder,cvv,exp} = req.body;
+  let price = null
+  let charge = null
+  let amount = null
   let authorID = req.headers['x-user'];
   if (!authorID) {
     console.log("no authorID")
@@ -236,9 +256,7 @@ export const buyTicket = async (req: Request, res: Response) => {
   let order_id: string = null;
   try {
     // Find the event by its ID and acquire a pessimistic lock
-    console.log("before")
     const event = await Event.findById(eventID)
-    console.log("after")
     if (!event) {
       throw new Error("Event not found");
     }
@@ -246,6 +264,33 @@ export const buyTicket = async (req: Request, res: Response) => {
     const ticketContainingReserved = event.tickets.find(ticket => ticket.name === ticketName);
     if (!ticketContainingReserved) {
       throw new Error("Ticket containing reserved ticket not found");
+    }
+    price=ticketContainingReserved.price
+
+    // get the reservaation
+    const get_reservation = await axios.get(`${reservationServiceURL}/getbyid/${eventID}`);
+    const ticket_res = get_reservation.data;
+    console.log(ticket_res)
+    if (!ticket_res) {
+      throw new Error("Error getting reservation");
+      return;
+    }
+    amount=ticket_res.amount
+    charge=price*amount
+    let tmp = { 
+      cc: cc,
+      holder: holder,
+      cvv: cvv,
+      exp: exp,
+      charge: charge};
+    const get_hammer = await axios.post(`https: /www.cs-wsp.net/_functions/pay`,tmp);
+    const hammer_res = get_reservation.data;
+    console.log(hammer_res)
+    if (!hammer_res) {
+      console.log("Hammer problem");
+      res.status(500).end(JSON.stringify({ check:false,
+        cment:"Hammer problem"}));
+      return;
     }
     const response = await axios.delete(`${reservationServiceURL}/removebyid/${authorID}`);
     console.log('Response data:', response.data);
@@ -268,13 +313,61 @@ export const buyTicket = async (req: Request, res: Response) => {
     await event.save();
     console.log("Ticket bought successfully");
   } catch (error) {
-    res.status(500).end("Internal Server Error");
+    res.status(500).end(JSON.stringify({ check:true ,
+      cment:"Internal Server Error"+error}));
     console.error("Error in deleting here:", error);
     return;
   }
-  res.status(200).end(order_id);
+  res.status(200).end(JSON.stringify({ check:true ,
+                        order_id:order_id,
+                        cment:"Ticket bought successfully"}));
 };
+// update event
+export const refundOrderID = async (req: Request, res: Response) => {
+  const orderID = req.params.id; // Extract event ID from URL
+  try {
+    let tmp={
+      orderID: orderID
+    }
+    
+    const response= await axios.get(`${orderServiceURL}/getbyuserid/${orderID}`);
+    const order = response.data;
+    console.log(order)
+    if (!order) {
+      console.error("Order not found");
+      throw new Error("Order not found");
+    }
+    let res_refund=await axios.post(`https: /www.cs-wsp.net/_functions/refund`,tmp);
+    if(res_refund.status!=200){
+      throw new Error("Error in refunding order");
+    }
+    const event = await Event.findById(order.eventID)
+    if (!event) {
+      throw new Error("Event not found");
+    }
+    // Find the ticket by its name
+    const ticketContainingReserved = event.tickets.find(ticket => ticket.name === order.ticketName);
+    if (!ticketContainingReserved) {
+      throw new Error("Ticket containing reserved ticket not found");
+    }
+  ticketContainingReserved.quantity++;
+    // Save the updated event
+    await event.save();
 
+    // delete order from orderes
+    let res_refund2=await axios.delete(`${orderServiceURL}/delete/${orderID}`);
+    if(res_refund2.status!=200){
+      throw new Error("Error in deleting order");
+    }
+
+  } catch (error) {
+    console.log("error refunding order");
+    res.status(500).end(JSON.stringify({ check:false }));
+    return;
+  }
+  res.status(200).end(JSON.stringify({ check:true,
+                                      cment:error })); //newEvent is null if body contains no new (schema) fields
+};
 const validatePermissions = (requiredPermission: string, permission: any) => {
   const permissionHierarchy = { A: 1, M: 2, W: 3, U: 4 };
 
