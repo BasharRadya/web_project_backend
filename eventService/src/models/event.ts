@@ -1,4 +1,4 @@
-import * as mongoose from "mongoose";
+  import * as mongoose from "mongoose";
 import Joi from "joi";
 const eventSchema = new mongoose.Schema(
   {
@@ -14,6 +14,7 @@ const eventSchema = new mongoose.Schema(
       {
         name: String,
         quantity: Number,
+        originalQuantity: Number,
         price: Number,
     }
   ],
@@ -38,6 +39,7 @@ export const eventSchemaValidator = Joi.object({
       Joi.object({
         name: Joi.string().required(),
         quantity: Joi.number().integer().min(0).required(),
+        originalQuantity: Joi.number().integer().min(0).required(),
         price: Joi.number().min(0).required(),
       }).unknown(true)
     )
@@ -46,7 +48,10 @@ export const eventSchemaValidator = Joi.object({
 export const buyTicketValidator = Joi.object({
   eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
-  // reservedTicketId: Joi.string().required(),
+  cc: Joi.string().required(),
+  holder: Joi.string().required(),
+  cvv: Joi.string().required(),
+  exp: Joi.string().required(),
 }).unknown(true);
 export const reservationValidatorRoute = Joi.object({
   eventID: Joi.string().required(),

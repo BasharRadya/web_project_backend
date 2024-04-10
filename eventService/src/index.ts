@@ -13,6 +13,7 @@ import {
   deleteEvent,
   buyTicket,
   reserveTicket,
+  refundOrderID,
 } from "./routes.js";
 import {
   GET_EVENT_BY_ID,
@@ -25,6 +26,7 @@ import {
   ERROR_401,
   MANAGER_PERMISSIONS,
   USER_PERMISSIONS,
+  REFUND_ORDERID,
 } from "./const.js";
 import { Producer } from "./producer.js";
 import { checkPermissionsMiddleware } from "./auth.js";
@@ -92,6 +94,8 @@ eventAPI.delete(DELETE_EVENT_BY_ID, await checkPermissionsMiddleware(MANAGER_PER
 eventAPI.post(POST_EVENT, await checkPermissionsMiddleware(MANAGER_PERMISSIONS), createEvent);
 eventAPI.post(BUY_TICKET_EVENT, await checkPermissionsMiddleware(USER_PERMISSIONS), buyTicket);
 eventAPI.post(RESERVE_TICKET_EVENT, await checkPermissionsMiddleware(USER_PERMISSIONS), reserveTicket);
+eventAPI.put(REFUND_ORDERID, await checkPermissionsMiddleware(USER_PERMISSIONS), refundOrderID);
+
 eventAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });

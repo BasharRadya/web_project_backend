@@ -122,3 +122,20 @@ export const removeReservationByUserID = async (req: Request, res: Response) => 
   }
   res.status(200).end("success delete");
 };
+
+
+//get reservation by user id
+export async function getReservationByUserID(req: Request, res: Response) {
+
+  let id = req.params.id;
+  let tmp = {eventID: id};
+  let reservations: any = null;
+  try {
+    reservations = await Reservation.find(tmp)
+  } catch (error) {
+    res.status(500).end("Internal Server Error");
+    console.error("Error in validating user:", error);
+    return;
+  }
+  res.status(200).end(JSON.stringify(reservations));
+}

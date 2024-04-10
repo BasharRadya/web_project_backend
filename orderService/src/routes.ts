@@ -127,3 +127,38 @@ export async function getOrderByEventID(req: Request, res: Response) {
   }
   res.status(200).end(JSON.stringify(orders));
 }
+//get all orders by Oder ID
+export async function getOrderByID(req: Request, res: Response) {
+
+
+  let id = req.params.id;
+  let tmp = { _id: id };
+  let orders: any = null;
+  try {
+    orders = await Order.findById(id)
+    if(!orders){
+      console.log("Order not found")
+      throw new Error("Order not found")
+    }
+  } catch (error) {
+    res.status(500).end("Internal Server Error");
+    console.error("Error in validating user:", error);
+    return;
+  }
+  res.status(200).end(JSON.stringify(orders));
+}
+
+//delete order by Oder ID
+export async function deleteByID(req: Request, res: Response) {
+  let id = req.params.id;
+  let tmp = { _id: id };
+  let orders: any = null;
+  try {
+    await Order.deleteOne(tmp)
+  } catch (error) {
+    res.status(500).end("Internal Server Error");
+    console.error("Error in validating user:", error);
+    return;
+  }
+  res.status(200).end(JSON.stringify(orders));
+}
