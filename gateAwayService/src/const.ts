@@ -3,7 +3,8 @@ export const LOGOUT_PATH = "/logout";
 export const SIGNUP_PATH = "/signup";
 export const PUT_PERMISSION = "/permission";
 export const GET_PERMISSION = "/permission/:id";
-
+export const VALIDATE_TOKEN = "/validateToken";
+export const GET_USERNAME = "/username";
 
 //permissions
 export const ADMIN_PERMISSIONS = "A";

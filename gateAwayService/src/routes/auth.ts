@@ -115,6 +115,15 @@ export const verifyTokenMiddleware = (req: Request, res: Response, next: NextFun
   }
 };
 
+export const getUserNameRoute = async (req: Request, res: Response) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).end("No valid session token found.");
+  }
+  let user = jwt.verify(token, secretKey) as JwtPayload;
+  res.status(200).end(JSON.stringify({ username: user.username }));
+}
+
 export const verifyToken = (req: Request, res: Response): string => {
   const token = req.cookies.token;
   if (!token) {
@@ -212,7 +221,7 @@ export const changePermissionRoute = async (req: Request, res: Response) => {
 
 export const getPermissionRoute = async (req: Request, res: Response) => {
   //TODO: assess whether we need to pass token in inter-service communication
-  
+
   // if (!(await validateUser(req, res, USER_PERMISSIONS))) {
   //   return;
   // }
@@ -281,4 +290,8 @@ const verifyPermissionLevel = (requiredPermission: string, userPermission: strin
     const userPermissionLevel = permissionHierarchy[userPermission];
     return userPermissionLevel <= requiredPermissionLevel;
   }
+};
+
+export const successRoute = (_req: Request, res: Response) => {
+  res.status(200).end("Success");
 };
