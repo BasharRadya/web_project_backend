@@ -6,8 +6,8 @@ const eventSchema = new mongoose.Schema(
     category: String,
     description: String,
     organizer: String,
-    start_date: Date,
-    end_date: Date,
+    start_date: String,
+    end_date: String,
     location: String,
     image: String,
     tickets: [
@@ -30,8 +30,8 @@ export const eventSchemaValidator = Joi.object({
   category: Joi.string().required(),
   description: Joi.string().required(),
   organizer: Joi.string().required(),
-  start_date: Joi.date().iso().required(),
-  end_date: Joi.date().iso().greater(Joi.ref("start_date")).required(),
+  start_date: Joi.string().required(),
+  end_date: Joi.string().required(),
   location: Joi.string().required(),
   image: Joi.string().optional(),
   tickets: Joi.array()
@@ -39,12 +39,12 @@ export const eventSchemaValidator = Joi.object({
       Joi.object({
         name: Joi.string().required(),
         quantity: Joi.number().integer().min(0).required(),
-        originalQuantity: Joi.number().integer().min(0).required(),
         price: Joi.number().min(0).required(),
       }).unknown(true)
     )
     .required(),
 }).unknown(true);
+
 export const buyTicketValidator = Joi.object({
   eventID: Joi.string().required(),
   ticketName: Joi.string().required(),

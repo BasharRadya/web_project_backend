@@ -94,7 +94,9 @@ export const getEventById = async (req: Request, res: Response) => {
 // create new event
 export const createEvent = async (req: Request, res: Response) => {
   // Validate request body against the defined schema
+  console.log(req.body)
   const { error } = eventSchemaValidator.validate(req.body);
+  console.log(error)
   if (error) {
     // If validation fails, send a 400 (Bad Request) response with the validation error
     res.status(400).end("Invalid body in create event");
