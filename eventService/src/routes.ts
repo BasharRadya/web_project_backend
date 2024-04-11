@@ -258,7 +258,7 @@ export const reserveTicket = async (req: Request, res: Response) => {
     // console.log("Ticket reserved successfully");
     // console.log("!!!!!!")
     // console.log(response_res.data)
-    res.status(200).end(JSON.stringify(response_res.data));
+    res.status(200).end(JSON.stringify({id:response_res.data}));
   } catch (error) {
     console.error("Error reserving ticket:", error);
     res.status(500).end("Internal Server Error");
