@@ -46,6 +46,7 @@ export const eventSchemaValidator = Joi.object({
 }).unknown(true);
 
 export const buyTicketValidator = Joi.object({
+  reservationID: Joi.string().required(),
   eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
   cc: Joi.string().required(),

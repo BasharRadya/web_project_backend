@@ -42,17 +42,17 @@ export async function createOrderRoute(req: Request, res: Response) {
     return res.status(400).end("Invalid request body format");
     return;
   }
-  const { eventID, ticketName } = req.body;
-  let authorID=req.headers['x-user'];
-  if(!authorID){
-    console.log("authorID not found in headers");
-    authorID="6601e2fef9f7ef9b52edc4c9"
+  const { eventID, ticketName,quantity } = req.body;
+  let username=req.headers['x-user'];
+  if(!username){
+    console.log("username not found in headers");
   }
-  console.log(authorID);
+  console.log(username);
   const newOrder = new Order({
-    authorID: authorID,
+    username: username,
     eventID: eventID,
     ticketName: ticketName,
+    quantity: quantity
   });
   try {
     await newOrder.save();
@@ -65,13 +65,8 @@ export async function createOrderRoute(req: Request, res: Response) {
   console.log("Order created");
   res.status(201).end(newOrder._id.toString());
 }
-//get all orders of a user gived userID
-export async function getOrderByUserID(req: Request, res: Response) {
-  // debugLog("getEventsByCategory")
-  // if (!await validateUser(req, res, WORKER_PERMISSIONS)) {
-  //   return;
-  // }
-  // res.setHeader("Content-Type", "application/json");
+//get all orders of a user gived username
+export async function getOrderByUsername(req: Request, res: Response) {
 
   let skip: any = req.query.skip;
   let limit: any = req.query.limit;
@@ -81,11 +76,13 @@ export async function getOrderByUserID(req: Request, res: Response) {
   if (isNaN(limit) || limit > 50) {
     limit = 50;
   }
-  // debugLog("skip", skip);
-  // debugLog("limit", limit);
 
-  let id = req.params.id;
-  let tmp = { authorID: id };
+  let username=req.headers['x-user'];
+  if(!username){
+    console.log("username not found in headers");
+  }
+  console.log(username);
+  let tmp = { username: username };
   let orders: any = null;
   try {
     orders = await Order.find(tmp).skip(skip).limit(limit);
@@ -98,11 +95,6 @@ export async function getOrderByUserID(req: Request, res: Response) {
 }
 //get all orders by EventID
 export async function getOrderByEventID(req: Request, res: Response) {
-  // debugLog("getEventsByCategory")
-  // if (!await validateUser(req, res, WORKER_PERMISSIONS)) {
-  //   return;
-  // }
-  // res.setHeader("Content-Type", "application/json");
 
   let skip: any = req.query.skip;
   let limit: any = req.query.limit;
@@ -112,8 +104,6 @@ export async function getOrderByEventID(req: Request, res: Response) {
   if (isNaN(limit) || limit > 50) {
     limit = 50;
   }
-  // debugLog("skip", skip);
-  // debugLog("limit", limit);
 
   let id = req.params.id;
   let tmp = { eventID: id };
@@ -129,7 +119,6 @@ export async function getOrderByEventID(req: Request, res: Response) {
 }
 //get all orders by Oder ID
 export async function getOrderByID(req: Request, res: Response) {
-
 
   let id = req.params.id;
   let tmp = { _id: id };
