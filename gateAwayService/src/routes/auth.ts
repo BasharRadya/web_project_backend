@@ -92,6 +92,7 @@ export const loginRoute = async (req: Request, res: Response) => {
 export async function logoutRoute(req: Request, res: Response) {
   res.clearCookie("token", {
     httpOnly: true,
+    sameSite: "none",
     secure: secure,
   });
 
