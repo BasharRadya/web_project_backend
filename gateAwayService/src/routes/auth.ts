@@ -85,7 +85,7 @@ export const loginRoute = async (req: Request, res: Response) => {
   const token = jwt.sign({ username: username }, secretKey, {
     expiresIn: "24h",
   });
-  res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 24 });
+  res.cookie("token", token, { secure: secure, sameSite: "none", httpOnly: true, maxAge: 24 * 60 * 60 * 24 });
   res.status(200).end("Logged in succesffuly");
 };
 
