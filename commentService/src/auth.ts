@@ -3,6 +3,8 @@ import { NextFunction, Request, Response } from "express";
 import { debugLog } from "./debug.js";
 import dotenv from "dotenv";
 
+axios.defaults.withCredentials = true;
+
 dotenv.config();
 const gatewayUrl = process.env.GATEWAY_URL;
 

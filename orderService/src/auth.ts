@@ -4,6 +4,8 @@ import { debugLog } from "./debug.js";
 
 const gatewayUrl = process.env.GATEWAY_URL;
 
+axios.defaults.withCredentials = true;
+
 export const checkPermissionsMiddleware = async (requiredPermission: string) => {
 
   // Return a new middleware function configured with the specified permission level

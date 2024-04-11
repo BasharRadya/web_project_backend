@@ -14,6 +14,8 @@ import {
 import dotenv from "dotenv";
 import axios from "axios";
 
+axios.defaults.withCredentials = true;
+
 dotenv.config();
 const secure = process.env.NODE_ENV === "production";
 const secretKey = process.env.SECRET_KEY || "your_secret_key";

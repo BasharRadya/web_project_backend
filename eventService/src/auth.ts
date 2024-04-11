@@ -2,6 +2,8 @@ import axios from "axios";
 import { NextFunction, Request, Response } from "express";
 import { debugLog } from "./debug.js";
 
+axios.defaults.withCredentials = true;
+
 const gatewayUrl = process.env.GATEWAY_URL;
 
 export const checkPermissionsMiddleware = async (requiredPermission: string) => {
