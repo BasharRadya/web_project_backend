@@ -17,10 +17,9 @@ export async function createCommentRoute(req: Request, res: Response) {
   const { error } = commentDetailsValidator.validate(req.body);
   if (error) {
     return res.status(400).end("Invalid request body format");
-    return;
   }
   const { eventID, comment } = req.body;
-  let authorID=req.headers['x-user'];
+  let authorID = req.headers['x-user'];
   console.log(authorID);
   const newComment = new Comment({
     authorID: authorID,
