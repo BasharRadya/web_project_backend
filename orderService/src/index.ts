@@ -87,11 +87,11 @@ orderAPI.use(cors(corsOptions));
 
 
 //routings
-orderAPI.post(CREATE_ORDER_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createOrderRoute);
-orderAPI.get(GET_ORDER_BY_USERNAME,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByUsername);
-orderAPI.get(GET_ORDER_BY_EVENT_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByEventID);
-orderAPI.get(GET_ORDER_BY_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByID);
-orderAPI.delete(DELETE_ORDER_BY_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), deleteByID);
+orderAPI.post(CREATE_ORDER_PATH, createOrderRoute);
+orderAPI.get(GET_ORDER_BY_USERNAME, getOrderByUsername);
+orderAPI.get(GET_ORDER_BY_EVENT_ID, getOrderByEventID);
+orderAPI.get(GET_ORDER_BY_ID, getOrderByID);
+orderAPI.delete(DELETE_ORDER_BY_ID, deleteByID);
 
 orderAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");

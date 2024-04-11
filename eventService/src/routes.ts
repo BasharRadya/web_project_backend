@@ -179,14 +179,14 @@ export const reserveTicket = async (req: Request, res: Response) => {
   const { error } = reservationValidatorRoute.validate(req.body);
   if (error) {
     // If validation fails, send a 400 (Bad Request) response with the validation error
-    res.status(400).end("Invalid body in create event");
+    res.status(400).end("Invalid body in resevation event");
     // debugLog(error)
     return;
   }
   let { eventID, ticketName, amount } = req.body
-  console.log(eventID)
-  console.log(ticketName)
-  console.log(amount)
+  // console.log(eventID)
+  // console.log(ticketName)
+  // console.log(amount)
   // get reservations
   try {
     const response = await axios.get(`${reservationServiceURL}/getreservation/${eventID}/${ticketName}`);
@@ -199,7 +199,7 @@ export const reserveTicket = async (req: Request, res: Response) => {
     }
     // Check if the available quantity of the ticket is sufficient
     const numReservedOfThisTicketType =  sumQuantities(ticket)
-    console.log(numReservedOfThisTicketType)
+    // console.log(numReservedOfThisTicketType)
     const event = await Event.findById(eventID)
     if (!event) {
       throw new Error("Event not found");
@@ -217,8 +217,8 @@ export const reserveTicket = async (req: Request, res: Response) => {
     }
     //send message broker to make Order entity
     let username = req.headers['x-user'];
-    console.log("###########")
-    console.log(username);
+    // console.log("###########")
+    // console.log(username);
     if (!username) {
       console.log("no username")
     }
@@ -231,21 +231,34 @@ export const reserveTicket = async (req: Request, res: Response) => {
     }
     let config = {
       headers: {
-          'x-user': username
-      }
+          'x-user': username,
+          'Content-type': 'application/x-www-form-urlencoded'
+        }
   }
-    const response_res = await axios.post(`${reservationServiceURL}/create`,tmp,
-    {
-      headers: {
-          'x-user': username
-      }
-  });
+  //   const response_res = await axios.post(`${reservationServiceURL}/create`,tmp,
+  //   {
+  //     headers: { 
+  //         'x-user': username
+  //     }
+  // });
+
+  const response_res=await axios({
+    method: 'post',
+    url: `${reservationServiceURL}/create`,
+    data: tmp,
+    withCredentials: true,
+    headers: {
+        'x-user': username
+    }
+})
     if(response_res.status!=201){
      console.log("error while using create reservation API") 
      throw new Error("Error in creating reservation");
     }
-    console.log("Ticket reserved successfully");
-    res.status(200).end(response_res.data);
+    // console.log("Ticket reserved successfully");
+    // console.log("!!!!!!")
+    // console.log(response_res.data)
+    res.status(200).end(JSON.stringify(response_res.data));
   } catch (error) {
     console.error("Error reserving ticket:", error);
     res.status(500).end("Internal Server Error");
@@ -258,7 +271,7 @@ export const buyTicket = async (req: Request, res: Response) => {
   const { error } = buyTicketValidator.validate(req.body);
   if (error) {
     // If validation fails, send a 400 (Bad Request) response with the validation error
-    res.status(400).end("Invalid body in create event");
+    res.status(400).end("Invalid body in BuyTicket event");
     // debugLog(error)
     return;
   }
@@ -289,9 +302,10 @@ export const buyTicket = async (req: Request, res: Response) => {
     // get the reservaation
     const get_reservation = await axios.get(`${reservationServiceURL}/getbyid/${reservationID}`);
     const get_reservation_data = get_reservation.data;
+    console.log("print get reservation data")
     console.log(get_reservation_data)
-    if (!get_reservation_data) {
-      throw new Error("Error getting reservation");
+    if (get_reservation_data.length==0) {
+      throw new Error("Error getting reservation, timeout or reservation not found");
       return;
     }
     amount=get_reservation_data.amount
@@ -302,7 +316,7 @@ export const buyTicket = async (req: Request, res: Response) => {
       cvv: cvv,
       exp: exp,   
       charge: charge};
-    const get_hammer = await axios.post(`https: /www.cs-wsp.net/_functions/pay`,tmp);
+    const get_hammer = await axios.post(`https://www.cs-wsp.net/_functions/pay`,tmp);
     const hammer_res = get_hammer.data;
     console.log(hammer_res)
     if (!hammer_res) {
@@ -323,7 +337,16 @@ export const buyTicket = async (req: Request, res: Response) => {
       quantity: amount
     };
     console.log(`${orderServiceURL}/create`);
-    const response2 = await axios.post(`${orderServiceURL}/create`, data);
+    // const response2 = await axios.post(`${orderServiceURL}/create`, data);
+    const response2=await axios({
+      method: 'post',
+      url: `${orderServiceURL}/create`,
+      data: data,
+      withCredentials: true,
+      headers: {
+          'x-user': username
+      }
+  })
     console.log('Response2 data:', response2.data);
     if (response2.status != 201) {
       throw new Error("Error in creating order");

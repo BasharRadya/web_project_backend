@@ -50,8 +50,6 @@ const reservationAPI = express();
 const requestLoggerMiddleware = (req, res, next) => {
   const log = `[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`;
   console.log(log);
-  console.log("hela ya romana")
-  console.log(req.headers['x-user'])
   next();
 };
 
@@ -89,10 +87,10 @@ reservationAPI.use(cors(corsOptions));
 
 
 //routings
-reservationAPI.post(CREATE_RESERVATION_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createReservationRoute);
-reservationAPI.get(GET_RESRVATION_BY_IDEVENT_TICKETNAME,await checkPermissionsMiddleware(USER_PERMISSIONS), getReservationByEventAndType);
-reservationAPI.get(GET_RESERVATION_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getReservationByEventAndType);
-reservationAPI.delete(REMOVE_RESERVATION_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), removeReservationByUserID);
+reservationAPI.post(CREATE_RESERVATION_PATH, createReservationRoute);
+reservationAPI.get(GET_RESRVATION_BY_IDEVENT_TICKETNAME, getReservationByEventAndType);
+reservationAPI.get(GET_RESERVATION_BY_USER_ID, getReservationByUserID);
+reservationAPI.delete(REMOVE_RESERVATION_BY_USER_ID, removeReservationByUserID);
 reservationAPI.get("/", (req: Request, res: Response) => {
   res.end("Hello World!");
 });

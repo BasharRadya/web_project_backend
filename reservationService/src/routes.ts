@@ -13,8 +13,8 @@ const secure = process.env.NODE_ENV === "production";
 //delete reservation func
 export const deleteReservation = async (id) => {
   console.log(id)
-  const { error } = reservationValidator.validate(id);
-  if (error) {
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
     console.log("Invalid request body format");
     return;
   }
@@ -24,7 +24,7 @@ export const deleteReservation = async (id) => {
     console.error("Error in deleting reservation:", error);
     return;
   }
-  console.log("Reservation created");
+  console.log("Reservation deleted");
 }
 //create reservation route
 export async function createReservationRoute(req: Request, res: Response) {
@@ -56,7 +56,7 @@ export async function createReservationRoute(req: Request, res: Response) {
     console.error("Error in validating user:", error);
     return;
   }
-  res.status(201).end(newReservation._id);
+  res.status(201).end(JSON.stringify({reservationID:newReservation._id}));
 }
 //get reservations
 export async function getReservationByEventAndType(req: Request, res: Response) {
@@ -91,11 +91,12 @@ export const removeReservationByUserID = async (req: Request, res: Response) => 
 
 //get reservation by entity id
 export async function getReservationByUserID(req: Request, res: Response) {
-
+  console.log("getReservationByUserID");
   let id = req.params.id;
   let reservations: any = null;
   try {
     reservations = await Reservation.findById(id)
+    console.log(reservations)
   } catch (error) {
     res.status(500).end("Internal Server Error");
     console.error("Error in validating user:", error);
