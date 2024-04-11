@@ -82,6 +82,7 @@ const corsOptions = {
     }
   },
   credentials: true,
+  sameSite: "none",
 };
 
 eventAPI.use(cors(corsOptions));

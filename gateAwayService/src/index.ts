@@ -38,15 +38,10 @@ const corsOptions = {
     }
   },
   credentials: true,
+  sameSite: "none",
 };
 
 gateway.use(cors(corsOptions));
-
-// gateway.use(cors({
-//   credentials: true,
-//   origin: false,
-//   sameSite: 'none'
-// }));
 
 const connect = async (serviceName: string, serviceHost: string) => {
   gateway.use(`/${serviceName}*`, verifyTokenMiddleware, createProxyMiddleware({
@@ -59,6 +54,7 @@ const connect = async (serviceName: string, serviceHost: string) => {
       if (req['user']) {
         proxyReq.setHeader('X-User', req['user']);
       }
+
     }
   }));
 };

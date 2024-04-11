@@ -78,6 +78,7 @@ const corsOptions = {
     }
   },
   credentials: true,
+  sameSite: "none",
 };
 
 reservationAPI.use(cors(corsOptions));

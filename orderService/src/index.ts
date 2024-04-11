@@ -80,6 +80,7 @@ const corsOptions = {
     }
   },
   credentials: true,
+  sameSite: "none",
 };
 
 orderAPI.use(cors(corsOptions));
