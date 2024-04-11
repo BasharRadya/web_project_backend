@@ -8,7 +8,7 @@ import cors from "cors";
 
 import {
   createOrderRoute,
-  getOrderByUserID,
+  getOrderByUsername,
   getOrderByEventID,
   getOrderByID,
   deleteByID,
@@ -16,7 +16,7 @@ import {
 
 import {
   CREATE_ORDER_PATH,
-  GET_ORDER_BY_USER_ID,
+  GET_ORDER_BY_USERNAME,
   GET_ORDER_BY_EVENT_ID,
   DELETE_ORDER_BY_ID,
   GET_ORDER_BY_ID,
@@ -88,7 +88,7 @@ orderAPI.use(cors(corsOptions));
 
 //routings
 orderAPI.post(CREATE_ORDER_PATH,await checkPermissionsMiddleware(USER_PERMISSIONS), createOrderRoute);
-orderAPI.get(GET_ORDER_BY_USER_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByUserID);
+orderAPI.get(GET_ORDER_BY_USERNAME,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByUsername);
 orderAPI.get(GET_ORDER_BY_EVENT_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByEventID);
 orderAPI.get(GET_ORDER_BY_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), getOrderByID);
 orderAPI.delete(DELETE_ORDER_BY_ID,await checkPermissionsMiddleware(USER_PERMISSIONS), deleteByID);

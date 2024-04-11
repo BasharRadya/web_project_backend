@@ -11,6 +11,7 @@ export const checkPermissionsMiddleware = async (requiredPermission: string) => 
   // Return a new middleware function configured with the specified permission level
   return async (req: Request, res: Response, next: NextFunction) => {
     const username = req.headers['x-user'];
+    console.log(req.headers)
     if (!username) {
       return res.status(400).send("Missing username in header");
     }

@@ -3,7 +3,7 @@ import Joi from "joi";
 
 // Define reservations schema
 const reservationSchema = new mongoose.Schema({
-  authorID:String,
+  username:String,
   eventID: String,
   ticketName: String,
   amount: Number,
@@ -17,7 +17,7 @@ const reservationSchema = new mongoose.Schema({
 export const Reservation = mongoose.model("reservation", reservationSchema);
 
 export const reservationValidator = Joi.object({
-  authorID: Joi.string().required(),
+  username: Joi.string().required(),
   eventID: Joi.string().required(),
   ticketName: Joi.string().required(),
   amount: Joi.number().integer().min(1).required(),

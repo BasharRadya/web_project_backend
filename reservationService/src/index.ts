@@ -50,6 +50,8 @@ const reservationAPI = express();
 const requestLoggerMiddleware = (req, res, next) => {
   const log = `[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`;
   console.log(log);
+  console.log("hela ya romana")
+  console.log(req.headers['x-user'])
   next();
 };
 
@@ -79,6 +81,7 @@ const corsOptions = {
   },
   credentials: true,
   sameSite: "none",
+  allowedHeaders: ['x-user'],
 };
 
 reservationAPI.use(cors(corsOptions));

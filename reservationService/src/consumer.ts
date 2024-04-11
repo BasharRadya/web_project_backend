@@ -1,7 +1,7 @@
 import * as amqp from "amqplib";
 // import ProductService from "./ProductService.js";
 
-import { createReservation } from "./routes.js";
+import { deleteReservation } from "./routes.js";
 // const productService = new ProductService();
 
 const amqpKey = "amqps://leivdnnl:wAU6uYYHla3Fmpg6wG-Xm05BYh5h_cDw@hummingbird.rmq.cloudamqp.com/leivdnnl";
@@ -25,17 +25,8 @@ export const consumeMessages = async () => {
         await channel.bindQueue(queue, exchange, "");
 
         // consume messages from the queue
-        // await channel.consume(queue, async (items: any[]) => {
-        //     console.log("updating Stock");
-
-        //     // for (let item of items) {
-        //     //     const product = await productService.getProductById(item.prodId);
-        //     //     const newStock = product.stock - item.count;
-        //     //     await productService.updateProduct({ id: product.id, name: product.name, category: product.category, description: product.description, price: product.price, stock: newStock, image: product.image })
-        //     // }
-        // });
         await channel.consume(queue, async (msg) => {
-            createReservation(JSON.parse(msg.content.toString()));
+            deleteReservation(msg.content.toString());
         },{noAck: true});
     } catch (error) {
         console.error(error);

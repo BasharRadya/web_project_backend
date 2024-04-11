@@ -40,6 +40,6 @@ export const GET_COMMENT_BY_USER_ID = "/getbyuserid/:id";
 
 //reservation paths
 export const CREATE_RESERVATION_PATH = "/create";
-export const REMOVE_RESERVATION_BY_USER_ID = "/removebyid/:id";
+export const GET_ORDER_BY_USERNAME = "/getbyusername";
 export const GET_RESRVATION_BY_IDEVENT_TICKETNAME = "/getreservation/:id/:string";
 export const GET_RESERVATION_BY_USER_ID = "/getbyid/:id";

@@ -1,5 +1,5 @@
 import { Event, eventSchemaValidator, reservationValidatorRoute, buyTicketValidator } from "./models/event.js";
-import e, { Request, Response, NextFunction } from "express";
+import e, { Request, Response, NextFunction, response } from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -191,7 +191,7 @@ export const reserveTicket = async (req: Request, res: Response) => {
   try {
     const response = await axios.get(`${reservationServiceURL}/getreservation/${eventID}/${ticketName}`);
     const ticket = response.data;
-    console.log(ticket)
+    // console.log(ticket)
     if (!ticket) {
       console.error("Ticket not found");
       res.status(500).end("Ticket not found");
@@ -216,23 +216,41 @@ export const reserveTicket = async (req: Request, res: Response) => {
       return;
     }
     //send message broker to make Order entity
-    let authorID = req.headers['x-user'];
-    console.log(authorID);
-    if (!authorID) {
-      console.log("no authorID")
-      authorID = "6601e2fef9f7ef9b52edc4c9"
+    let username = req.headers['x-user'];
+    console.log("###########")
+    console.log(username);
+    if (!username) {
+      console.log("no username")
     }
-    Producer.prototype.sendEvent(JSON.stringify({
-      authorID, eventID,
-      ticketName, amount
-    }));
+
+    let tmp={
+      username: username,
+      eventID: eventID,
+      ticketName: ticketName,
+      amount: amount
+    }
+    let config = {
+      headers: {
+          'x-user': username
+      }
+  }
+    const response_res = await axios.post(`${reservationServiceURL}/create`,tmp,
+    {
+      headers: {
+          'x-user': username
+      }
+  });
+    if(response_res.status!=201){
+     console.log("error while using create reservation API") 
+     throw new Error("Error in creating reservation");
+    }
     console.log("Ticket reserved successfully");
+    res.status(200).end(response_res.data);
   } catch (error) {
     console.error("Error reserving ticket:", error);
     res.status(500).end("Internal Server Error");
     return;
   }
-  res.status(200).end("sucessffuly reservered");
 };
 
 export const buyTicket = async (req: Request, res: Response) => {
@@ -245,19 +263,18 @@ export const buyTicket = async (req: Request, res: Response) => {
     return;
   }
 
-  let { eventID, ticketName ,cc,holder,cvv,exp} = req.body;
+  let {reservationID,eventID, ticketName ,cc,holder,cvv,exp} = req.body;
   let price = null
   let charge = null
   let amount = null
-  let authorID = req.headers['x-user'];
-  if (!authorID) {
-    console.log("no authorID")
-    authorID = "6601e2fef9f7ef9b52edc4c9"
+  let username = req.headers['x-user'];
+  if (!username) {
+    console.log("no username")
   }
-  console.log(authorID);
+  console.log(username);
   let order_id: string = null;
   try {
-    // Find the event by its ID and acquire a pessimistic lock
+    // (do this because u deleted the lock Find the event by its ID and acquire a pessimistic lock)
     const event = await Event.findById(eventID)
     if (!event) {
       throw new Error("Event not found");
@@ -270,23 +287,23 @@ export const buyTicket = async (req: Request, res: Response) => {
     price=ticketContainingReserved.price
 
     // get the reservaation
-    const get_reservation = await axios.get(`${reservationServiceURL}/getbyid/${eventID}`);
-    const ticket_res = get_reservation.data;
-    console.log(ticket_res)
-    if (!ticket_res) {
+    const get_reservation = await axios.get(`${reservationServiceURL}/getbyid/${reservationID}`);
+    const get_reservation_data = get_reservation.data;
+    console.log(get_reservation_data)
+    if (!get_reservation_data) {
       throw new Error("Error getting reservation");
       return;
     }
-    amount=ticket_res.amount
+    amount=get_reservation_data.amount
     charge=price*amount
     let tmp = { 
       cc: cc,
       holder: holder,
       cvv: cvv,
-      exp: exp,
+      exp: exp,   
       charge: charge};
     const get_hammer = await axios.post(`https: /www.cs-wsp.net/_functions/pay`,tmp);
-    const hammer_res = get_reservation.data;
+    const hammer_res = get_hammer.data;
     console.log(hammer_res)
     if (!hammer_res) {
       console.log("Hammer problem");
@@ -294,15 +311,16 @@ export const buyTicket = async (req: Request, res: Response) => {
         cment:"Hammer problem"}));
       return;
     }
-    const response = await axios.delete(`${reservationServiceURL}/removebyid/${authorID}`);
-    console.log('Response data:', response.data);
+
+    Producer.prototype.sendEvent(reservationID);
     // Increment the available quantity of the ticket
     ticketContainingReserved.quantity--;
     //send to order API
     const data = {
-      authorID: authorID,
+      username: username,
       eventID: eventID,
-      ticketName: ticketName
+      ticketName: ticketName,
+      quantity: amount
     };
     console.log(`${orderServiceURL}/create`);
     const response2 = await axios.post(`${orderServiceURL}/create`, data);

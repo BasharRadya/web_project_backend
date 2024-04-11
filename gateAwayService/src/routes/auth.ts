@@ -101,6 +101,7 @@ export async function logoutRoute(req: Request, res: Response) {
 
 export const verifyTokenMiddleware = (req: Request, res: Response, next: NextFunction): string => {
   const token = req.cookies.token;
+  console.log(token)
   if (!token) {
     res.status(401).end("No valid session token found.");
     return ERROR_401;
